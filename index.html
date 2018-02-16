@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>The Book of Mozilla, 12:10</title>
+	<style type="text/css">
+		html {
+			background: maroon radial-gradient(circle, #A01010 0%, #800000 80%) center center / cover no-repeat;
+			color: white;
+			font-family: serif;
+			font-style: italic;
+			text-align: center;
+			min-height: 100%;
+		}
+		
+		body {
+			margin: 4em;
+		}
+	
+		#moztext {
+			margin-top: 15%;
+			font-size: 1.1em;
+			line-height: 1.5;
+		}
+		
+		#moztext em {
+			font-size: 1.4em;
+			line-height: 0;
+		}
+		
+		#moztext em.blink {
+			animation: blink-animation 1s steps(5, start) infinite;
+			/*text-decoration: blink;*/
+		}
+		
+		#from {
+			font-size: 1.95em;
+			font-family: serif;
+			text-align: right;
+		}
+		
+		#footnote {
+			color: #650101;
+		}
+		
+		@keyframes blink-animation {
+			to {
+				visibility: hidden;
+			}
+		}
+	</style>
+</head>
+<body>
+
+<p id="moztext">And the beast shall come forth surrounded by a roiling <em>cloud</em> of <em>vengeance</em>. The house of the unbelievers shall be <em>razed</em> and they shall be scorched to the earth. Their tags shall <em class="blink">blink</em> until the end of <em>days</em>.</p>
+
+<p id="from"><em>from <strong>The Book of Mozilla, 12:10</strong></em></p>
+
+<p id="footnote"><strong>{</strong> By the way, there's nothing here yet. Well, except for this <strong>about:mozilla</strong> stuff, that is. <strong>}</strong></p>
+
+</body>
+</html>
