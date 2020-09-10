@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Speed-Sensitive Windscreen Wipers Upgrade for Mazda RX-8</title>
+	<link href="style/style.css" rel="stylesheet" media="screen" type="text/css">
+	<script type="text/javascript">
+		document.addEventListener("DOMContentLoaded", (event) => {
+			const burger = document.getElementById("nav-burger");
+			const contents = document.getElementById("nav-contents");
+			var shown = false;
+			
+			if(burger && contents) {
+				burger.addEventListener("click", (event) => {
+					shown = !shown;
+					if(shown) {
+						contents.classList.add("nav-shown");
+					} else {
+						contents.classList.remove("nav-shown");
+					}
+					event.preventDefault();
+				});
+				
+				for(const link of contents.getElementsByTagName("a")) {
+					link.addEventListener("click", (event) => {
+						shown = false;
+						contents.classList.remove("nav-shown");
+					});
+				}
+			}
+		});
+	</script>
+</head>
+<body>
+
+<div id="container">
+
+<nav id="nav">
+<div class="nav-mobile">
+<a id="nav-burger" href="#">&equiv;</a>
+</div>
+<div id="nav-contents" class="nav-contents">
+<h4>Contents</h4>
+<dl>
+<dt><a href="#introduction">Introduction</a></dt>
+<dt><a href="#how-the-factory-standard-wiper-system-works">How the Factory-Standard Wiper System Works</a></dt>
+<dt><a href="#design-considerations">Design Considerations</a></dt>
+<dd><a href="#form-factor">Form Factor</a></dd>
+<dd><a href="#getting-the-vehicles-speed">Getting the Vehicle&#39;s Speed</a></dd>
+<dd><a href="#stalk-volume-potentiometer">Stalk &#39;Volume&#39; Potentiometer</a></dd>
+<dd><a href="#wiper-motor-current">Wiper Motor Current</a></dd>
+<dd><a href="#relay-noise">Relay Noise</a></dd>
+<dd><a href="#control-logic">Control Logic</a></dd>
+<dt><a href="#schematic">Schematic</a></dt>
+<dd><a href="#power-supply">Power Supply</a></dd>
+<dd><a href="#wash-intermittent-mode-autostop-inputs">Wash, Intermittent Mode &amp; Autostop Inputs</a></dd>
+<dd><a href="#vss-input">VSS Input</a></dd>
+<dd><a href="#potentiometer-input">Potentiometer Input</a></dd>
+<dd><a href="#relay-output">Relay Output</a></dd>
+<dd><a href="#microcontroller">Microcontroller</a></dd>
+<dt><a href="#pcb-layout">PCB Layout</a></dt>
+<dd><a href="#switch-assembly-pin-through-holes">Switch Assembly Pin Through Holes</a></dd>
+<dd><a href="#keep-out-areas">Keep-out Areas</a></dd>
+<dd><a href="#the-runt-pin">The &#39;Runt&#39; Pin</a></dd>
+<dt><a href="#construction-and-installation">Construction and Installation</a></dt>
+<dd><a href="#pcb">PCB</a></dd>
+<dd><a href="#bill-of-materials">Bill of Materials</a></dd>
+<dd><a href="#assembly">Assembly</a></dd>
+<dd><a href="#firmware-programming">Firmware Programming</a></dd>
+<dd><a href="#wiper-stalk-modification">Wiper Stalk Modification</a></dd>
+<dd><a href="#vehicle-installation">Vehicle Installation</a></dd>
+<dt><a href="#firmware">Firmware</a></dt>
+<dd><a href="#adc">ADC</a></dd>
+<dd><a href="#timers">Timers</a></dd>
+<dd><a href="#serial-uart">Serial UART</a></dd>
+<dd><a href="#eeprom">EEPROM</a></dd>
+<dd><a href="#sleep-mode">Sleep Mode</a></dd>
+<dd><a href="#fuses">Fuses</a></dd>
+<dt><a href="#questions-and-answers">Questions &amp; Answers</a></dt>
+<dt><a href="#improvements-and-changes">Improvements &amp; Changes</a></dt>
+</dl>
+</div>
+</nav>
+
+<main id="content">
+
+<h1>Speed-Sensitive Windscreen Wipers<br>Upgrade for Mazda RX-8</h1>
+<section>
+<a id="introduction" class="anchor"></a>
+<h2>Introduction</h2>
+<p><img src="imgs/rev-03-boards.jpg" referrerpolicy="no-referrer" alt="rev-03-boards"></p>
+<p>This is a project I worked on for a while during 2017-18. I&#39;d had this idea kicking around in my brain for a couple of years before then, originally sparked one day when I happened to be looking at the wiring diagram of the RX-8 concerning the windscreen wiper system.</p>
+<p>I&#39;m sure we&#39;ve all experienced the annoying scenario of driving in that kind of rain that requires a reasonably speedy wiper setting, but when you come to a standstill is barely touching the windscreen, requiring re-adjustment of the wiper speed. Pretty frustrating to have to be frequently tweaking the intermittent mode setting knob in repetitive speed-up-slow-down traffic.</p>
+<p>One feature that many newer cars have that can be pretty convenient for this scenario is speed-sensitive wipers. This handy feature will track the speed of the vehicle, and lengthen the wiping interval as the car comes to a halt.</p>
+<p>So, I decided to investigate to see if it would be possible to retro-fit such a feature, as that initial spark of an idea in my head suggested it might be.</p>
+<p>After a fair bit of work reverse-engineering how the standard wiper control system works, and several iterations of design I developed a nicely integrated upgrade that is pretty easy to install.</p>
+<p>Along the way I also even managed to eliminate another bug-bear of mine regarding the windscreen washer system. Holding the washer switch long enough for it to auto-wipe wastes far too much washer fluid, and the single wipe it does is never usually enough to get rid of whatever crap you&#39;re trying to clean off.</p>
+</section>
+<section>
+<a id="how-the-factory-standard-wiper-system-works" class="anchor"></a>
+<h2>How the Factory-Standard Wiper System Works</h2>
+<p>Here I&#39;ll attempt to describe how the standard intermittent mode wiper control system works on the RX-8. If you have a copy of Mazda&#39;s electrical diagrams, and flip to the <em>Windshield Wiper and Washer</em> section, you can see how the switches, motor, etc. are connected to each other, but it really doesn&#39;t tell you much about <em>how</em> it implements the intermittent mode operation.</p>
+<p><img src="imgs/wiring-diagram.png" referrerpolicy="no-referrer" alt="wiring-diagram"></p>
+<p>The wiper stalk assembly comprises several parts:</p>
+<ul>
+<li>Switch contacts for low-speed, high-speed, intermittent and momentary ("one-touch") wiper modes. The various switches are activated by moving the stalk vertically. </li>
+<li>A secondary switch contact for the windscreen washer. This is activated by pulling the stalk towards the driver horizontally.</li>
+<li>A rotary knob located on the stalk which controls the delay interval used in intermittent mode.</li>
+
+</ul>
+<p>The low, high, and momentary switch positions directly switch current through to the wiper motor, which has two inputs, one for each speed (momentary mode uses low speed). The intermittent and washer positions do <em>not</em> do this, however, but instead hand control of the motor to additional circuitry.</p>
+<p><img src="imgs/wiper-switch-assy-front.jpg" referrerpolicy="no-referrer" alt="wiper-switch-assy-front"></p>
+<p>All of the &#39;smarts&#39; for intermittent and wash modes are implemented by the circuit board on the back of the wiper stalk assembly:</p>
+<p><img src="imgs/wiper-switch-assy-rear.jpg" referrerpolicy="no-referrer" alt="wiper-switch-assy-rear"></p>
+<p>When the circuit board is removed from the wiper stalk, you can see that there&#39;s not much on the other side apart from a relay, some diodes, capacitors, a transistor, and a connector.</p>
+<p><img src="imgs/wiper-switch-assy-pcb-bottom.jpg" referrerpolicy="no-referrer" alt="wiper-switch-assy-pcb-bottom"></p>
+<p>I reverse-engineered this circuitry, and created this schematic:</p>
+<p><img src="imgs/wiper-switch-assy-schematic.png" referrerpolicy="no-referrer" alt="wiper-switch-assy-schematic"></p>
+<p>It can essentially be split into two separate parts: the intermittent mode variable interval timer, and the wash auto-wipe. Both parts ultimately cause a relay to be triggered, which switches power through to the low-speed input of the wiper motor. Both parts operate on a relatively straightforward timing mechanism called an RC delay circuit (where &#39;R&#39; stands for &#39;resistor&#39; and &#39;C&#39; for &#39;capacitor&#39;).</p>
+<p>For those not electronically-inclined, imagine you have a hosepipe with water, and a bucket to be filled. The water is the electricity, your thumb on the end of the hosepipe is the resistor, and the bucket is the capacitor. If you almost completely cover the end of the pipe with your thumb, the bucket fills slowly. If you release your thumb, the bucket fills much more quickly. Therefore, by adjusting your restriction (i.e. the resistance to flow) on the pipe, you vary the period of time it takes to fill the bucket.</p>
+<p>In our pipe-and-bucket metaphor, when the bucket gets full and starts to overflow, this is what triggers the transistor that powers the coil of the relay and switches the wipers on.</p>
+<p>What happens with the intermittent mode &#39;volume&#39; switch (as Mazda call it), is that as you twiddle the knob between the different settings, you are literally just adjusting the value of the resistive part of the circuit - that is, operating a variable resistor (which to be technically correct, is actually called a rheostat or potentiometer).</p>
+<p>With the washer auto-wipe, when the stalk is pulled it switches in the top-most part of the circuit, which has a fixed-value resistor and capacitor that equate to a fixed delay of around 2 seconds, and that overrides any signal from the intermittent mode RC timer.</p>
+<p>At this point, you may have noticed something: surely once the relay is triggered, how does the transistor controlling it get switched off? Otherwise, the wipers would just continually go on and on with no pauses, as if you had the stalk in the &#39;1&#39; position. This is where the auto-stop mechanism comes in to play.</p>
+<p>The auto-stop mechanism is what ensures the wipers return to their parked position, even if you turn the wipers off mid-sweep. It does this via the wiper motor assembly itself having a switch integrated within that takes over provision of the power feed until a full cycle has been completed.</p>
+<p>The intermittent mode circuitry also takes this feed and supplies it to the point marked &#39;J7&#39; in the diagram above - the other leg of the capacitor involved in the timing. It&#39;s hard to explain in simple terms what happens here, but I&#39;ll try. Normally, this point is at ground - i.e. 0V. But when 12V is fed there, the zero side is now +12, so on the other side what was previously 12 also becomes 24. This excess voltage quickly gets absorbed and the cap now discharges, because it has 12V on both sides. When the wipers complete a cycle, the auto-stop switches back to 0V, but because the cap now has a difference of 12V forced across it in an uncharged state, it pulls the other side to zero (or even negative), and this turns off the transistor, and thus the relay!</p>
+<p><img src="imgs/autostop-graph.png" referrerpolicy="no-referrer" alt="autostop-graph"></p>
+<p>Ingeniously simple though this electronic circuit may be, it has a downside: it will be imprecise. This is because the exact timing is dependant on the exact resistance and capacitance of the component parts. Because of manufacturing tolerances, these are never exact to start with. Resistors can also vary by temperature. Plus, electrolytic capacitors (as used here) degrade with age, so their characteristics will change over time. All this results in the fact that every single RX-8 will exhibit slightly different timing of the windscreen wipers in intermittent mode.</p>
+<p>In conclusion: the standard control system is quite a clever piece of electronics, but at the same time also kind of rudimentary. It&#39;s a purely analogue system, so there&#39;s little scope for things to go drastically wrong, but it is also kind of imprecise.</p>
+</section>
+<section>
+<a id="design-considerations" class="anchor"></a>
+<h2>Design Considerations</h2>
+<p>Now that we know how the factory-standard system works - which essentially just involves switching a relay according to the user&#39;s input from a potentiometer - we can design a replacement system that operates according to our own principles, including that it should vary the wiping delay according to the vehicle&#39;s current speed.</p>
+<p>Before I show the final design, I will comment on a number of significant areas that required a lot of consideration, or more consideration than one might expect.</p>
+<a id="form-factor" class="anchor"></a>
+<h3>Form Factor</h3>
+<p>As we intend to entirely replace the standard intermittent wiper control circuitry, this involves replacing the original circuit board in its entirety. This means that we will need to reproduce the size and shape, as well as its interface and mounting points.</p>
+<p>The standard circuit board interfaces with the switch mechanism by way of vertical pins that protrude through appropriately-located holes in the circuit board, where they are soldered. This is in fact also the sole way the board is mounted - there are no screws or clips.</p>
+<p><img src="imgs/wiper-switch-assy-interior-1.jpg" referrerpolicy="no-referrer" alt="wiper-switch-assy-interior-1"></p>
+<h4>Circuit Board Dimensions</h4>
+<p>Making measurements of the board enables us to create a board outline and lay out all the necessary holes:</p>
+<p><img src="imgs/board_dimensions.png" referrerpolicy="no-referrer" alt="board_dimensions"></p>
+<p>(All dimensions in millimetres. Coordinates of smaller holes not shown to avoid crowding the diagram.)</p>
+<p>There are some key details of the board&#39;s dimensions that we need to keep the same as (or similar to) the original board:</p>
+<ol>
+<li>The chamfering of the top- and bottom-left corners.</li>
+<li>The notch on the right hand side and larger circular hole on the left side.</li>
+
+</ol>
+<p>The first is required because there is a plastic cover that snaps over the back of the assembly, clipping on to 3 hooks on the sides:</p>
+<p><img src="imgs/wiper-switch-assy-cover.jpg" referrerpolicy="no-referrer" alt="wiper-switch-assy-cover"></p>
+<p>The bottom-left corner of the board is actually enclosed by the skirt of the cover, so if it were to remain square, the cover would not fit! The original board uses a large chamfer here; I have chosen to use a rounded corner because the inside surface of the cover is curved, so matching that radius gains some surface area on the board. The top-left corner does not have such a restriction (the cover sits flush on the surface), but a square corner would poke out.</p>
+<p>The second detail, the large hole and notch, are features that simply serve to &#39;locate&#39; the circuit board on the assembly. I say &#39;locate&#39; in quotes, because in actuality the holes for the switch pins have finer tolerances and are the determining factor there.</p>
+<p>You may notice that there is one feature I have not chosen to replicate: the large cut-out on the bottom edge. This is not actually necessary, because neither the cover nor the body of the stalk assembly impinge on this space. I chose to have a straight edge here for more board area (which will be needed!).</p>
+<h4>Component Placement</h4>
+<p>On the original circuit board, all large components (relay, etc.) are mounted on the reverse side of the PCB, their height occupying the interior space of the assembly. With the board removed from the assembly, we can see what space we have to work with when placing larger components. The headroom we have here is about 18 mm.</p>
+<p><img src="imgs/wiper-switch-assy-interior-2.jpg" referrerpolicy="no-referrer" alt="wiper-switch-assy-interior-2"></p>
+<p>The largest component, the relay, pretty much has to sit at the top-right just like the original, because that is the largest area available. There is some slight wiggle room here, though, should it be needed.</p>
+<p>The other component that we do not have any flexibility in placing is the connector that receives the plug for the potentiometer on the stalk itself. This must sit at the lower-middle of the left side, because it must poke through the gap in the side of the assembly. A matching channel is present in that part of the cover that allows the wiring to be routed into the stalk.</p>
+<p>In addition to the existing connector, on our design we will need to add another: for input of the VSS signal. The only area where this can be placed and have a wire routed out under the cover is on the bottom edge. There is a vertical tab here on the assembly body, but luckily it is half the height of the others, so will not pose a problem for a small connector.</p>
+<p>All other large components such as capacitors can be located wherever they will fit.</p>
+<p>Turning attention to the top (outward-facing) side, one might think we are free of any further restrictions on placement if we use surface-mount components, but that would be wrong! Referring back to the earlier image of the translucent plastic cover, you will see that there is a recessed area at the lower-middle. This actually sits pretty much flush to the surface of the PCB, so even the tiniest of SMD components would have a hard time squeezing in here. Effectively, this area becomes a &#39;no-go&#39; area.</p>
+<p>Still on the subject of the plastic cover, there is one further detail that must be considered when determining component placement: because the edge of the cover sits flush with the surface of the board at the top, right, and part of the left edges, we must make allowance for the thickness of the cover. The cover is approximately 1.5 mm thick, so we cannot put any components in this &#39;margin&#39; area either.</p>
+<a id="getting-the-vehicles-speed" class="anchor"></a>
+<h3>Getting the Vehicle&#39;s Speed</h3>
+<p>How exactly does one go about getting a some kind of speed signal from the car? In days of yore, the transmission had an output that would drive the speedometer (and odometer) directly, and if you wanted that information, you had to tap into that signal. The RX-8 is a more modern vehicle, so there are two possible ways:</p>
+<ul>
+<li>Digital OBD data from the CAN bus</li>
+<li>Analogue Vehicle Speed Signal (VSS)</li>
+
+</ul>
+<p>The former is easily obtained if you have an OBD dongle and software for your laptop, tablet or smartphone (e.g. <a href='https://play.google.com/store/apps/details?id=org.prowl.torque&amp;hl=en_GB'>Torque Pro</a>). However, as the CAN bus is a complex digital signalling system, it is a complicated task to implement this method, so something simpler is desirable.</p>
+<p>The latter is a signal provided by the RX-8&#39;s ABS/DSC control module (responsible for the stability control and anti-lock braking system). It can be found on the wiring harness leading to the audio head unit. On non-Bose audio equipped RX-8s, it is used for automatic volume control; on sat-nav equipped RX-8s it is used as an auxiliary speed input when GPS signal is weak or lost (e.g. in tunnels).</p>
+<p>The VSS signal is actually pretty simple. It is just a square wave that varies in frequency according to the speed the car is currently travelling.</p>
+<p>The nature of the VSS isn&#39;t actually described in any place I could find in Mazda&#39;s factory service information, so I had to measure and characterise the nature of the signal. Here are the pertinent details:</p>
+<ul>
+<li>DC square wave, 5V peak-to-peak</li>
+<li>Fixed 50% duty cycle</li>
+<li>Frequency equates to vehicle speed in miles per hour (e.g. 50 mph = 50 Hz)</li>
+<li>When stationary (i.e. 0 mph), signal rests low, at 0V</li>
+<li>Signal given in both forward and reverse</li>
+
+</ul>
+<p>With a microcontroller timer-counter, it is fairly easy to measure the frequency of such a signal.</p>
+<a id="stalk-volume-potentiometer" class="anchor"></a>
+<h3>Stalk &#39;Volume&#39; Potentiometer</h3>
+<p>The rotary knob on the stalk that controls intermittent mode delay is essentially a potentiometer with several detented positions. It is connected to the stalk assembly PCB with two wires terminated with a small 2-pin connector.</p>
+<h4>Connector</h4>
+<p><img src="imgs/wiper-switch-assy-pcb-connector.jpg" referrerpolicy="no-referrer" alt="wiper-switch-assy-pcb-connector"></p>
+<p>In order for our new design to be a direct replacement, we must use a connector that fits the existing plug. Therefore, we need to identify the manufacturer and specific part of the connector on the original board. However, with connectors that&#39;s often difficult because they rarely carry their part number on the part itself.</p>
+<p>A good first thing to do is identify the connector&#39;s primary features and dimensions:</p>
+<ul>
+<li>Two pins</li>
+<li>2.5 mm pin pitch (approx. - possibly 2.54 mm, both are within the realm of measurement error)</li>
+<li>Through-hole, with 2 additional mounting pins (pitch approx. 5 mm)</li>
+<li>Right-angle orientation</li>
+<li>No latch/lock</li>
+
+</ul>
+<p>This will allow us to narrow down the range of potential candidates greatly. Another big help is to identify the manufacturer. This can sometimes be easy because often their name or logo is on the part.</p>
+<p>In this respect we are in luck. Careful examination using a magnifying glass reveals the letters &quot;MXJ&quot; on the rear of the part. These are the initials of Molex Japan. This makes sense, given that the Mazda is a Japanese car manufacturer. Also, knowing that it is of Japanese origin, we can make a fairly safe assumption that the pin pitch is 2.5 mm rather than 2.54 mm (or 0.1&quot;), due to their preference for metric units.</p>
+<p>Looking through the Molex catalogue, comparing other details such as height, width, and other dimensions, we find that this connector is a member of the Mini-Lock family. There is listed apparently only a single right-angle, through-hole 2-pin PCB connector in that family: part number <a href='https://www.molex.com/molex/products/part-detail/pcb_headers/0534260210'>53426-0210</a>.</p>
+<p><img src="imgs/molex-53426-0210-3d.jpg" referrerpolicy="no-referrer" alt="molex-53426-0210-3d"></p>
+<p>Puzzlingly though, this part does not <em>exactly</em> resemble the one on the original board. That one has a shorter overall depth (with the pins not protruding so far out the back) and does not have the &#39;feet&#39; at the back. It also has the additional mounting pins, whereas the candidate we have found does not.</p>
+<p>Further searching reveals that Molex also do a range of through-hole Mini-Lock connectors that are supplied on paper tape, designed for automated machine-feeding. For some reason, these are not listed on the website under the Mini-Lock family. I only found reference to them in an old &#39;Transportation Products&#39; PDF catalogue from 2010.</p>
+<p><img src="imgs/molex-53426-tape.png" referrerpolicy="no-referrer" alt="molex-53426-tape"></p>
+<p>The 2-pin right-angle product in this range is part number <a href='https://www.molex.com/molex/products/part-detail/pcb_headers/0534260290'>53426-0290</a>, and its features from the part drawings exactly match those of the connector on the original board. Mystery solved! However, because this part appears not to be commonly stocked by distributors, we will ignore it in favour of the more common variant found earlier.</p>
+<h4>Characteristics</h4>
+<p>Rather than being continuously variable, the potentiometer has 9 detented positions, so whatever readings our system will take of the resistance will have a number of distinct values. Just determine a set of thresholds that distinguish each position setting, and away we go, right?</p>
+<p>Not so fast! After analysis of several examples of stalk assemblies, I found that potentiometer characteristics varied quite significantly from unit to unit. Take a look at the following chart:</p>
+<p><img src="imgs/int-vol-resistances-chart.png" referrerpolicy="no-referrer" alt="int-vol-resistances-chart"></p>
+<p>This chart plots the measured resistance (in kΩ) when a switch assembly&#39;s knob is turned to each position. At each position two measurements are taken: a minimum and maximum. This is because there is slop in the detents of the knob mechanism, so the resting position at each detent can vary. A total of 13 units were measured.</p>
+<p>Your attention is called to the upper positions. Notice anything concerning? Many of the &#39;min&#39; values of one position overlap with the &#39;max&#39; values of its neighbouring position! If it&#39;s not clear, the table below shows it more clearly:</p>
+<figure><table>
+<thead>
+<tr><th style='text-align:right;' >Setting</th><th style='text-align:right;' >0</th><th style='text-align:right;' >1</th><th style='text-align:right;' >2</th><th style='text-align:right;' >3</th><th style='text-align:right;' >4</th><th style='text-align:right;' >5</th><th style='text-align:right;' >6</th><th style='text-align:right;' >7</th><th style='text-align:right;' >8</th></tr></thead>
+<tbody><tr><td style='text-align:right;' ><strong>Smallest Min</strong></td><td style='text-align:right;' >0.0</td><td style='text-align:right;' >1.3</td><td style='text-align:right;' >7.6</td><td style='text-align:right;' >13.8</td><td style='text-align:right;' >21.4</td><td style='text-align:right;' ><em>27.6</em></td><td style='text-align:right;' ><em>33.7</em></td><td style='text-align:right;' ><em>40.3</em></td><td style='text-align:right;' ><em>42.7</em></td></tr><tr><td style='text-align:right;' ><strong>Largest Max</strong></td><td style='text-align:right;' >1.2</td><td style='text-align:right;' >6.1</td><td style='text-align:right;' >12.8</td><td style='text-align:right;' >20.1</td><td style='text-align:right;' ><em>27.8</em></td><td style='text-align:right;' ><em>35.0</em></td><td style='text-align:right;' ><em>41.0</em></td><td style='text-align:right;' ><em>49.1</em></td><td style='text-align:right;' >50.3</td></tr></tbody>
+</table></figure>
+<p>The values in <em>italics</em> are where the smallest measured minimum of one position is lower than the largest maximum of the position immediately preceding. For example at position 7, min of 40.3 is less than max of 41.0 at position 6.</p>
+<p>What does this mean? It means we cannot just have a general one-size-fits-all set of thresholds that can be used to map our potentiometer readings to an intermittent &#39;volume&#39; setting. The solution to this will be to have a unique calibration of thresholds specific to each unit, stored in the microcontroller&#39;s non-voltatile memory.</p>
+<a id="wiper-motor-current" class="anchor"></a>
+<h3>Wiper Motor Current</h3>
+<p>When designing the PCB, we must give due consideration to the fact that the wiper motor has quite a high current draw. I didn&#39;t measure it, but sources talking about other vehicles give typical figures in the range of 3-5 amps. The current draw varies in proportion to the load on the wiper mechanism, which is essentially how much frictional resistance there is. However, it is not the typical operating current of the motor that we need to consider, but the peak current!</p>
+<p>The relay in the original circuit is rated for 20A. This may seem excessive when the typical current draw is a single digit figure, but it isn&#39;t until you consider the entire wiper system electrical circuit as a whole that the reason for this becomes clear.</p>
+<p><img src="imgs/wiring-diagram-fuse.png" referrerpolicy="no-referrer" alt="wiring-diagram-fuse"></p>
+<p>If you trace the factory wiring diagrams back towards the power supply, you will see that the whole wiper circuit is fused at 20A. What this means is that in order for the fuse to actually be the weakest link in the circuit (such that it&#39;ll be the first thing to blow), everything else downstream in the circuit to the wiper motor (i.e. switch, relay) must be able to handle peaks of at least 20A too.</p>
+<p>What this means for our replacement circuit board is that we must not only use a 20A-rated relay too, but also be sure that our traces on the PCB can handle a brief 20A surge! Narrow traces would probably overheat and burn up if asked to pass that kind of load. But, because we are cramming a lot more componentry on to the board, we don&#39;t have the luxury of using fat, wide traces.</p>
+<p>We can solve this problem by using PCBs made with 2 oz / 70 µm thickness copper layers instead of the normal 1 oz / 35 µm. The results of some calculations indicate that if we are willing to accept a rise in temperature of the copper trace of 70°C above ambient, we would need a 7.5 mm wide trace to sustain 20A. In the final design, layout constraints will dictate that we can&#39;t quite manage that width, having to reduce to 5 mm, but even like that we can be pretty sure our board won&#39;t catch fire if there is current surge!</p>
+<a id="relay-noise" class="anchor"></a>
+<h3>Relay Noise</h3>
+<p>No, not electrical noise, but of the <em>audible</em> kind! When I built the first prototype unit, I used a bog-standard relay in an exceedingly commonly-available size (SPDT, aka &quot;1 Form C&quot;, approx. 16x13 mm, 5 pins in a 10x10.2 mm square with fifth central pin offset by 2.5 mm). But, I soon realised this was not a great idea, and that there was something special about the relay present on the original board.</p>
+<p>Common models of relay actually make quite a lot of noise when they switch, relatively speaking. An eminently audible &#39;click&#39; or &#39;tock&#39; noise. When such a relay is only about half a metre away from your head (as it is when sat in the vehicle), and it&#39;s making that noise every few seconds, and your rain-soaked car journey is a couple of hours long, it can soon become quite irritating!</p>
+<p>Looking up the specifications of the original relay, a Taiko TA1-225 (later Panasonic ACTA23), I found that it is classified as a &#39;silent&#39; relay, rated for operational noise of around 55 dB - less than that of a softly-spoken conversation. Regular relays are much louder - I would estimate about 70 dB.</p>
+<p><img src="imgs/ta-relay-noise-spec.png" referrerpolicy="no-referrer" alt="ta-relay-noise-spec"></p>
+<p>At this point, however, I had already done the PCB design, incorporating a standard, commonly-available size of relay that the TA1 was not (it&#39;s quite large for its current rating). And, to top it off, even if I wanted to use the TA1, it was out of production.</p>
+<p>Fortunately, Panasonic do an equivalent &#39;silent&#39; relay in the form factor I was already using: the CQ series. I managed to acquire some of those, which turned out to be new-old-stock and branded NAIS; they, like Taiko, have also since been acquired by Panasonic.</p>
+<a id="control-logic" class="anchor"></a>
+<h3>Control Logic</h3>
+<p>The obvious choice to implement the control logic for our replacement system is with a microcontroller, as whatever behaviour is necessary can be programmed in code, making it possible to easily alter the behaviour at any time without hardware changes.</p>
+<p>We need to choose a microcontroller that has all the following features and facilities:</p>
+<ul>
+<li>An analogue-to-digital converter (ADC) to read the input voltage from the &#39;volume&#39; control knob potentiometer on the stalk.</li>
+<li>A timer/counter to read the square wave input representing the vehicle&#39;s current speed.</li>
+<li>Digital inputs to read the state of intermittent and washer mode switch inputs.</li>
+<li>A digital output to trigger the relay.</li>
+<li>Built-in EEPROM for storing configuration data, so operating parameters can be altered without changing and re-compiling the code.</li>
+<li>Operates on 5 volts. Using 3.3V would waste too much power in the linear regulator.</li>
+<li>A serial UART to aid testing and debugging (status and diagnostic output).</li>
+<li>Non-proprietary C language toolchain.</li>
+<li>Ubiquitous and readily-available - nothing exotic or hard to find.</li>
+
+</ul>
+<p>Things that we <em>don&#39;t</em> need (or want):</p>
+<ul>
+<li>Large pin count. Few I/Os are needed, and we want it to be relatively small in footprint.</li>
+<li>High speed or 32-bit. There&#39;s nothing computationally intensive.</li>
+<li>Clocked from an external source (e.g. a crystal). We don&#39;t need high accuracy or precision of timing, as we&#39;re dealing with things on a human timescale - i.e. seconds, not microseconds.</li>
+
+</ul>
+<p>The microcontroller that I chose was the Atmel (now Microchip) <a href='https://www.microchip.com/wwwproducts/en/ATtiny841'>ATtiny841</a>. It is an 8-bit AVR microcontroller that is part of the ATtiny family. It can run at 8 MHz on an internal oscillator, and comes in a 14-pin SOIC package. For a full list of it&#39;s features, consult the <a href='http://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-8495-8-bit-AVR-Microcontrollers-ATtiny441-ATtiny841_Datasheet-Summary.pdf'>datasheet</a>.</p>
+</section>
+<section>
+<a id="schematic" class="anchor"></a>
+<h2>Schematic</h2>
+<p>Here is the complete schematic for the replacement circuit board (click for PDF):</p>
+<p><a href="imgs/schematic.pdf"><img src="imgs/schematic.png" referrerpolicy="no-referrer" alt="schematic"></a></p>
+<p>For reference, here are the corresponding locations of each of the named pins on the stalk assembly:</p>
+<p><img src="imgs/board_pins.png" referrerpolicy="no-referrer" alt="board_pins"></p>
+<a id="power-supply" class="anchor"></a>
+<h3>Power Supply</h3>
+<p><img src="imgs/schematic-power.png" referrerpolicy="no-referrer" alt="schematic-power"></p>
+<p>The microcontroller and other peripheral circuitry run at 5V and have modest current demands, so it is feasible to use a simple linear regulator to drop the input power (nominally 12V battery voltage, but realistically anywhere between 11-14V) down to that voltage.</p>
+<p>Our choice of linear regulator is the 5.0V fixed-voltage output version of the LM2931, chosen because it is an automotive-rated part that is specified to be able to cope with up to 60V load-dump situations, amongst other protections. We use the 8-pin SOIC version, as our output current requirement is fairly low, and we want to minimise the space taken on the board.</p>
+<p>Several manufacturers produce this part: ON Semi, TI and ST. We go with the ON Semi version, as it has a generous maximum input voltage rating of 40V, whereas curiously the Texas Instruments version is only rated for 26V. One note also about the ST version: it has an additional &#39;inhibit&#39; input on pin 5 even for the fixed-voltage version. We take the additional step of tying the normally non-connected pin 5 to ground (turning the inhibit off) should the ST version ever need to be used.</p>
+<a id="wash-intermittent-mode-autostop-inputs" class="anchor"></a>
+<h3>Wash, Intermittent Mode &amp; Autostop Inputs</h3>
+<p><img src="imgs/schematic-wash-intsw-autostop.png" referrerpolicy="no-referrer" alt="schematic-wash-intsw-autostop"></p>
+<p>These inputs are activated by the switch mechanism of the wiper stalk assembly.</p>
+<p>The wash and autostop inputs are 12V signals, so we need to reduce that down to under 5V - the VCC of our microcontroller. We do this using a resistor voltage divider. The resistor values need to be chosen carefully so that even if the input voltage varies (as it may do when the vehicle is running), we still get a &#39;high&#39; level at the microcontroller pin (the threshold for which is 60% of VCC, so approx. 3V with 5V VCC). Choosing values of 10K and 4.7K should work for any input level between about 10 and 15 volts, giving 3.2 to 4.8 volts out.</p>
+<p>Because these inputs effectively come from raw, unconditioned battery voltage, it would be best to also have some protection to guard against the unexpected. Should the input voltage ever reach higher than 15V, the divider will give more than 5V, which is bad for our microcontroller, so we also incorporate a 5.1V zener diode which will shunt anything over that level. However, if it were to just shunt the excess voltage straight to ground, that would effectively be a short-circuit, so we place the zener after the 10K series resistor, which will serve to limit the current. We also add a shottky diode for reverse-polarity protection.</p>
+<p>We can also add some filtering using the same 10K series resistor. Adding a 0.1µF capacitor to ground turns the two components in combination in to a low-pass filter, which will get rid of any high-frequency noise or transients. The cut-off frequency with these component values is around 160 Hz, which should be plenty of headroom for even the most rapid switch actuations.</p>
+<p>The intermittent mode switch mechanism is different: it simply bridges two pins on the assembly, rather than switching in 12V. Both of these pins can therefore be under our control, so we can feed one side of the switch with our regulated 5V, and need less protection on the other side. No voltage divider or diodes necessary - just the same low-pass filtering as the others, plus a pull-down resistor.</p>
+<a id="vss-input" class="anchor"></a>
+<h3>VSS Input</h3>
+<p><img src="imgs/schematic-vss.png" referrerpolicy="no-referrer" alt="schematic-vss"></p>
+<p>As mentioned before, the VSS signal is variable-frequency 5V square wave, so we should in theory be able to feed it straight in to the microcontroller. However, because this signal&#39;s origin is external, it would be prudent to add some protection here too. (Imagine what happens if the VSS wire accidentally gets shorted to 12V!) We use the same diodes and series resistor as the wash and autostop inputs. Additionally, we also use a low-pass filter for noise rejection, but this time tuned using a 47nF capacitor to a higher cut-off frequency of around 338 Hz (because 160 Hz would be a little too close to the RX-8&#39;s stated top speed of 147 mph).</p>
+<a id="potentiometer-input" class="anchor"></a>
+<h3>Potentiometer Input</h3>
+<p><img src="imgs/schematic-intvol.png" referrerpolicy="no-referrer" alt="schematic-intvol"></p>
+<p>Because the intermittent mode &#39;volume&#39; knob is essentially a potentiometer (albeit one with discrete steps), the intermittent mode input will be an analogue signal. This will be fed to the microcontroller&#39;s analogue-to-digital converter (ADC).</p>
+<p>The nominal maximum resistance of the potentiometer is 47K. If we make it the lower half of a resistor divider in combination with an upper 62K resistor, and feed the divider from 5V, we can get an output voltage that varies between 0 and 2.15 volts. This will be ideal for use with our microcontroller&#39;s 2.2V ADC reference voltage.</p>
+<p>Why not use 5V (i.e. VCC) as the full-scale reference of the ADC? Yes, we could use a 1K resistor on the upper half of the divider, and get about 4.9V out when the pot is at its maximum 47K. However, we have to consider the situation where the pot is at the opposite end of travel, where it reads zero ohms (and yes, it does actually go down to zero!). Then we would be pulling 5mA from the 5V supply, which is a little high.</p>
+<p>You may see the note on the schematic with regard to changing R4 to 68K. Some examples of wiper stalk assemblies were later found (after the design had been finalised) to measure as high as 50K. This would bring the output to 2.23V, which is over the reference voltage, meaning the input would be clipped. Increasing R4 scales that back down to 2.12V.</p>
+<a id="relay-output" class="anchor"></a>
+<h3>Relay Output</h3>
+<p><img src="imgs/schematic-relay.png" referrerpolicy="no-referrer" alt="schematic-relay"></p>
+<p>The relay we have chosen (Panasonic/NAIS CQ1-12V) has a coil that is to be driven with 12V, so we will need to switch this indirectly using a transistor. The relay&#39;s coil has a nominal resistance of 225 ohms, which makes it draw 53mA at that operating voltage. Any small, cheap, generic BJT should be able to handle that.</p>
+<p>As we&#39;re using a BJT, the base of the transistor will need a series current-limiting resistor that allows the transistor to pass the required coil current (perhaps up to 63mA at VBAT of 14V). A 4.7K resistor gives 1mA from the microcontroller&#39;s 5V output, which should be plenty for any transistor with a gain of at least 100, but without taxing the MCU with excessive current draw.</p>
+<p>To handle relay coil turn-off inductive voltage spikes (which can damage the transistor), instead of using the traditional arrangement of a diode in anti-parallel with the coil, we are going to instead use a zener diode to ground. This has an advantage over the traditional circuit, in that it makes for a quicker turn-off (or &quot;pull-in&quot;) of the relay. You don&#39;t get the slight delay from the re-circulating flyback current momentarily keeping the relay on past the point the transistor turned off. This helps when switching inductive loads (like motors), as it reduces arcing on the relay contacts due to the faster pull-in movement, which helps prolong the life of the relay.</p>
+<p>The only other part worth mentioning here is the diode D10, used to guard against reverse polarity. This is a wise precaution, because otherwise the zener, forward-biased in that scenario, would allow current to bypass the transistor, causing the relay to turn on unexpectedly.</p>
+<a id="microcontroller" class="anchor"></a>
+<h3>Microcontroller</h3>
+<p>As mentioned earlier, our microcontroller of choice is the Atmel ATtiny841. Fortuitously, the SOIC-14 package has the <em>exact</em> number of I/O pins that we need - no more, no less!</p>
+<p>Not much to describe here. Inputs and outputs are routed to port pins in the following manner:</p>
+<ul>
+<li>Intermittent &#39;volume&#39; input to PA0, for ADC channel zero.</li>
+<li>UART header TX/RX to PA1/PA2 (TXD0/RXD0).</li>
+<li>VSS to PA3, the T0 external clock source for Timer/Counter0.</li>
+<li>ISP programming header to PA4-6 (SCK/MISO/MOSI).</li>
+<li>Relay output on PA7.</li>
+<li>Wash, intermittent mode, and autostop inputs to PB0-2.</li>
+<li>Reset to PB3. Externally pulled high and decoupled for robustness.</li>
+
+</ul>
+</section>
+<section>
+<a id="pcb-layout" class="anchor"></a>
+<h2>PCB Layout</h2>
+<p><img src="imgs/pcb-layout.png" referrerpolicy="no-referrer" alt="pcb-top"></p>
+<p>As the board size, shape, and location of mounting/connection pins are predetermined by the need to replicate the original, as well as things like locations of the relay and potentiometer connector, most of the business of laying out our board is just a question of fitting things in where they can go.</p>
+<p>Filtering and protection for wash and autostop inputs are at the bottom-left, near their pins. Relay coil drive is placed inside the footprint of the relay. Intermittent mode switch input filtering is also near one of those pins. The VSS input connector, as mentioned previously, needs to be at the bottom edge, so its protection and filtering components are nearby. That only leaves the power regulation and microcontroller to be located, and seeing as we only have the top-left area to play with, that&#39;s where they go!</p>
+<p>High-current power traces - from the power and autostop pins to the relay, and from the relay to low-speed output pin - are ran on the bottom of the board. As discussed before, they are nice and fat (at least 5 mm in width) to handle high current peaks in the double-digits of amps.</p>
+<p>Apart from these basics, there are several other things worthy of note, which I will elaborate on.</p>
+<a id="switch-assembly-pin-through-holes" class="anchor"></a>
+<h3>Switch Assembly Pin Through Holes</h3>
+<p>You may notice that the switch assembly pin through holes only have pads on the top side. This is because they are intended to be non-plated through holes - i.e. just like on a single-sided PCB. But why? Vias are needed to route the trace to the bottom layer; why not just connect the traces on the bottom side?</p>
+<p>I discovered on an early prototype board - where the high-power traces were indeed connected on the bottom side of the hole - that this caused a serviceability issue. If the board needed to be desoldered from the switch assembly for any reason, it made it very hard to do so without damaging the board.</p>
+<p>Because the switch assembly pins are effectively large (relatively speaking) strips of copper metal, they act like a heatsink, sucking away all the heat from a soldering iron tip. So, on a plated through hole, the solder inside the hole is much more likely not to want to flow, meaning it&#39;s not easy (or impossible) to remove all of it. Thus sometimes when pulling the board off, the plating inside the hole would be ripped out.</p>
+<p>On some of the holes, we rely on the hole plating to provide signal to the input circuitry on the top side, so when it is missing or damaged, we may no longer have a reliable connection.</p>
+<p>The problem was solved by making the solder jointing take place exclusively on the top side of the board.</p>
+<p>For the transition between top and bottom without using the pin through holes, vias on the trace were used instead. Care was taken to use an appropriate number and size of vias (9 x 0.6 mm) to be able to handle the current demand.</p>
+<a id="keep-out-areas" class="anchor"></a>
+<h3>Keep-out Areas</h3>
+<p>As discussed previously, there are certain areas on the board - both top side and bottom - where components cannot be placed. This is due to imposition of things like the plastic cover on the top, or parts of the switch assembly body on the bottom.</p>
+<p><img src="imgs/pcb-keepout.png" referrerpolicy="no-referrer" alt="pcb-keepout"></p>
+<p>These were roughly marked on the PCB layout with &#39;keep-out&#39; shapes. It wasn&#39;t worth drawing one of these zones for the 1.5 mm margin area at left, top, and right edges (due to the plastic cover thickness) - just had to make sure to bear it in mind when placing components.</p>
+<a id="the-runt-pin" class="anchor"></a>
+<h3>The &#39;Runt&#39; Pin</h3>
+<p>On the keep-out zones shown above, you can see that there is an area defined at the top-right. You&#39;ll also see there is a rectangle of solid silkscreen placed there on the bottom side of the PCB. Why?</p>
+<p>There is actually a vestigial pin there that isn&#39;t as tall as the others, but tall enough to touch the underside of the board. I call it the &#39;runt&#39; pin.</p>
+<p><img src="imgs/wiper-switch-assy-interior-runt-pin.jpg" referrerpolicy="no-referrer" alt="wiper-switch-assy-interior-runt-pin"></p>
+<p>It turns out that this pin, for whatever reason, is connected to the 12V power supply (i.e. the actual &#39;PWR&#39; pin). No idea why it exists - perhaps something to do with how the wiper stalk assembly is manufactured?</p>
+<p>Because this pin carries power and touches the underside of the board, where there is a ground plane, the only thing preventing a direct short-circuit between power and ground is the thin layer of solder mask. So, I felt it prudent to add a little extra insulation in the form of the silkscreen. I could have removed the ground plane from this area, but I needed to have a ground-stitching via nearby, so couldn&#39;t.</p>
+</section>
+<section>
+<a id="construction-and-installation" class="anchor"></a>
+<h2>Construction and Installation</h2>
+<p>This section will document what is involved in building a PCB, programming the firmware, modifying a wiper stalk assembly, and installation.</p>
+<a id="pcb" class="anchor"></a>
+<h3>PCB</h3>
+<p>The PCB is a standard 1.6 mm thickness 2-layer board, with <strong>2 oz / 70 µm</strong> copper layers.</p>
+<p>Gerber and NC drill files for the PCB can be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a>. They should be suitable for submission as-is to any decent manufacturer. Note that there are <em>two</em> drill files: one for plated through-holes (PTH), and one for non-plated through-holes (NPTH).</p>
+<p><strong>Important:</strong> do not be tempted to have the PCBs manufactured with a 1 oz / 35 µm copper layer thickness! The thicker 2 oz copper is required to handle the peak current demands with the constrained sizes of trace that can be fitted on the board.</p>
+<a id="bill-of-materials" class="anchor"></a>
+<h3>Bill of Materials</h3>
+<p>Below is the listing of parts required to assemble a PCB:</p>
+<figure><table>
+<thead>
+<tr><th>Reference Designator</th><th>Type</th><th>Value</th><th>Package</th><th>Specification</th><th>Manufacturer <a href="#bom-note-1">[1]</a></th><th>Part Number <a href="#bom-note-1">[1]</a></th><th>Qty</th></tr></thead>
+<tbody><tr><td>C1, C4, C5, C7, C8, C9</td><td>Ceramic Capacitor</td><td>100nF</td><td>0805</td><td>50V, ±10%, X7R</td><td>-</td><td>-</td><td>6</td></tr><tr><td>C2</td><td>Ceramic Capacitor</td><td>10µF</td><td>1210</td><td>50V, ±20%, X7S</td><td>-</td><td>-</td><td>1</td></tr><tr><td>C3</td><td>Electro&shy;lytic Capacitor</td><td>100µF</td><td>&nbsp;</td><td>16V, ±20%, 85°C, 5mm diameter, 2mm lead pitch, ≤11mm height</td><td>-</td><td>-</td><td>1</td></tr><tr><td>C6</td><td>Ceramic Capacitor</td><td>47nF</td><td>0805</td><td>50V, ±10%, X7R</td><td>-</td><td>-</td><td>1</td></tr><tr><td>D1</td><td>Zener Diode</td><td>18V</td><td>SOD-123</td><td>500mW, 5%</td><td>-</td><td>-</td><td>1</td></tr><tr><td>D2, D3, D6</td><td>Zener Diode</td><td>5.1V</td><td>SOD-123</td><td>500mW, 5%</td><td>-</td><td>-</td><td>3</td></tr><tr><td>D4, D5, D7</td><td>Schottky Diode</td><td>&nbsp;</td><td>SOD-123</td><td>30V Vrrm, 200mA If</td><td>-</td><td>-</td><td>3</td></tr><tr><td>D10</td><td>Diode</td><td>&nbsp;</td><td>SOD-123</td><td>100V Vrrm, 200mA If</td><td>-</td><td>-</td><td>1</td></tr><tr><td>INTVOL</td><td>Header</td><td>&nbsp;</td><td>&nbsp;</td><td>Mini-Lock series, 2-pin, right-angle, 2.5mm pitch</td><td>Molex</td><td>53426-0210</td><td>1</td></tr><tr><td>VSS</td><td>Header</td><td>&nbsp;</td><td>&nbsp;</td><td>XH series, 2-pin, right-angle, 2.5mm pitch</td><td>JST</td><td>S2B-XH-A</td><td>1</td></tr><tr><td>K1</td><td>Relay</td><td>&nbsp;</td><td>&nbsp;</td><td>SPDT (1 Form C), 12VDC, 20A</td><td>NAIS (Panasonic)</td><td>CQ1-12V</td><td>1</td></tr><tr><td>Q1</td><td>BJT NPN</td><td>&nbsp;</td><td>SOT-23</td><td>65V Vce, 100mA Ic, ≥100 hFE</td><td>-</td><td>-</td><td>1</td></tr><tr><td>R1, R2, R7</td><td>Resistor</td><td>4.7kΩ</td><td>0805</td><td>125mW, 1%</td><td>-</td><td>-</td><td>3</td></tr><tr><td>R3, R9, R10, R11, R13</td><td>Resistor</td><td>10kΩ</td><td>0805</td><td>125mW, 1%</td><td>-</td><td>-</td><td>5</td></tr><tr><td>R4</td><td>Resistor</td><td>62kΩ</td><td>0805</td><td>125mW, 1%</td><td>-</td><td>-</td><td>1</td></tr><tr><td>R5, R6, R8</td><td>Resistor</td><td>10kΩ</td><td>1206</td><td>250mW, 1%</td><td>-</td><td>-</td><td>3</td></tr><tr><td>R12</td><td>Resistor</td><td>0Ω</td><td>0805</td><td>125mW, 5%</td><td>-</td><td>-</td><td>1</td></tr><tr><td>U1</td><td>Linear Voltage Regulator</td><td>&nbsp;</td><td>SOIC-8</td><td>5.0V, ±5%</td><td>ON Semiconductor</td><td>LM2931D-5.0G <a href="#bom-note-2">[2]</a></td><td>1</td></tr><tr><td>U2</td><td>Micro&shy;controller</td><td>&nbsp;</td><td>SOIC-14</td><td>8KB Flash, 512B SRAM, 512B EEPROM</td><td>Atmel (Microchip)</td><td>ATTINY841-SSU</td><td>1</td></tr></tbody>
+</table></figure>
+<p>Notes:</p>
+<ol>
+<li><p><a id="bom-note-1" class="anchor"></a>Where a part&#39;s manufacturer and/or part number are marked with a dash, any part that is the listed package type, value, and meets (or exceeds) specification can be used. For example, I used a BC846 for transistor Q1, but something with equivalent specifications and pin-out like an MMBT3904 will do fine.</p>
+</li>
+<li><p><a id="bom-note-2" class="anchor"></a>There are several variants of the ON Semi LM2931, with different output voltage tolerances (3.8%, 5%) and packaging (tube, reel). All the following alternate part numbers are suitable substitutes:</p>
+<ul>
+<li>LM2931D-5.0R2G (5%, reel)</li>
+<li>LM2931AD-5.0G (3.8%, tube)</li>
+<li>LM2931AD-5.0R2G (3.8%, reel)</li>
+
+</ul>
+</li>
+
+</ol>
+<p>Not listed in the table above - as they are not parts installed on the PCB - but required for installation in the vehicle and use, are the following parts for making the VSS connection to the secondary connector on the board:</p>
+<figure><table>
+<thead>
+<tr><th>Item</th><th>Specification</th><th>Manufacturer</th><th>Part Number</th><th>Qty</th></tr></thead>
+<tbody><tr><td>Housing</td><td>XH series, 2-pin, 2.5mm pitch</td><td>JST</td><td>XHP-2</td><td>1</td></tr><tr><td>Crimp Terminal</td><td>XH series, 22-28AWG, tin-plated</td><td>JST</td><td>BXH-001T-P0.6</td><td>1</td></tr><tr><td>Wire</td><td>22AWG, 1 metre</td><td>-</td><td>-</td><td>1</td></tr><tr><td>Tap/Splice</td><td>Suitable for 18-22AWG wire</td><td>-</td><td>-</td><td>1</td></tr></tbody>
+</table></figure>
+<a id="assembly" class="anchor"></a>
+<h3>Assembly</h3>
+<p>Assembly of a PCB should be fairly straightforward for those with some experience in soldering of surface-mount components. No ultra-fine pitch components are used - the smallest passives are 0805 size, and all ICs feature a 1.27mm (0.05&quot;) pin pitch.</p>
+<p>All polarised components have their orientation marked on the silkscreen. Diodes have their cathode marked with a dot. Electrolytic capacitors have the negative terminal marked within the component outline by a shaded band, and the positive terminal with a plus sign (&quot;+&quot;). Take care also to note the orientation of SOIC chips; the pin 1 end is marked with a notch in the silkscreen outline.</p>
+<p>Do not forget also that all through-hole components are to be installed on the <em>bottom</em> side of the board!</p>
+<p>To make up the VSS wiring connection, you will need a crimping tool appropriate for JST XH terminals. Note that it only consists of a single wire, so only one terminal will be fitted to the plug; which pin of the plug is indicated by the arrow marker on the PCB silkscreen.</p>
+<a id="firmware-programming" class="anchor"></a>
+<h3>Firmware Programming</h3>
+<p>Once the complete PCB has been assembled, but before installation and use, the firmware of the microcontroller will need programming to its flash memory, and calibration and configuration data to the EEPROM. A pre-compiled firmware binary file, in Intel Hex format, may be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a>. Alternatively, if desired, the firmware source code may be compiled from scratch.</p>
+<p>Programming is performed using the ISP header on the board, using the SPI protocol. You will need a compatible programming adapter, such as one of the following:</p>
+<ul>
+<li>Atmel AVR-ISP MkII</li>
+<li>Atmel ICE</li>
+<li><a href='https://www.fischl.de/usbasp/'>USBasp</a></li>
+
+</ul>
+<p>It is reportedly also possible to program AVR microcontrollers with Microchip PICkit 4 or Snap programmers, but this has not been tested. There is also the option of using an Arduino Uno development board that is programmed with the ArduinoISP sketch.</p>
+<h4>Potentiometer Characterisation Procedure</h4>
+<p>Before programming, it is necessary to collect characterisation data from and calculate calibration data for the particular donor wiper stalk assembly&#39;s intermittent mode knob potentionmeter. Follow the procedure below. You&#39;ll need two small wires like breadboard jumpers, paper clips, pins, etc.</p>
+<p><img src="imgs/pot-characterisation.jpg" referrerpolicy="no-referrer" alt="pot-characterisation"></p>
+<ol>
+<li><p>Remove the translucent plastic cover from the rear of the unit by unhooking the six tabs around its perimeter. Use a small, flat-bladed screwdriver or similar tool.</p>
+</li>
+<li><p>Unplug the connector from the side of the circuit board. Free the wires from the slot in the stalk.</p>
+</li>
+<li><p>Take the jumper wires and insert one into each hole of the plug. Do not force overly-large wires into the holes, as you risk damaging the plug and/or leaving the plug with loose-fitting contacts afterwards.</p>
+</li>
+<li><p>Set your multimeter to resistance mode. If non auto-ranging, select the next highest range above 50K. Attach each lead of the meter to one of the wires protruding from the plug.</p>
+</li>
+<li><p>For each position (a total of 9) on the stalk&#39;s rotary knob, you will record resistance readings. Because the knob has some slack in where it comes to rest at each position, you&#39;ll need to record two readings for each position between the first and last: a &#39;min&#39; and &#39;max&#39; (any slack on the first and last positions has no effect on the resistance).</p>
+<ul>
+<li><p>Start at the top-most (longest interval) position and work your way down.</p>
+</li>
+<li><p>At each position except the first and last, to make the &#39;min&#39; reading, gently nudge the knob downwards as far as possible without it clicking over to the next position and note the reading; to make the &#39;max&#39; reading, likewise gently nudge the knob upwards as far as possible without clicking back to the previous position.</p>
+</li>
+<li><p>You should end up with a table of resistance readings similar to the following example (where top is &#39;8&#39; and bottom is &#39;0&#39;).</p>
+<figure><table>
+<thead>
+<tr><th>Setting</th><th>Min. Resistance (kΩ)</th><th>Max. Resistance (kΩ)</th></tr></thead>
+<tbody><tr><td>8</td><td>46.8</td><td>46.8</td></tr><tr><td>7</td><td>43.3</td><td>45.3</td></tr><tr><td>6</td><td>36.4</td><td>38.4</td></tr><tr><td>5</td><td>30.5</td><td>31.5</td></tr><tr><td>4</td><td>23.8</td><td>24.6</td></tr><tr><td>3</td><td>15.8</td><td>17.7</td></tr><tr><td>2</td><td>9.5</td><td>11.1</td></tr><tr><td>1</td><td>3.5</td><td>4.5</td></tr><tr><td>0</td><td>0.0</td><td>0.0</td></tr></tbody>
+</table></figure>
+</li>
+
+</ul>
+</li>
+<li><p>Enter these readings into the EEPROM Data Calculator tool (to be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a>). Save the generated data in to a file named with a &#39;.hex&#39; extension. This will be used later to program the microcontroller&#39;s EEPROM.</p>
+</li>
+
+</ol>
+<h4>ISP Connection</h4>
+<p>How to connect to the ISP pins when there can be no header installed? A simple trick is to use an elastic band and common &#39;DuPont&#39;-style jumper wires with male pins at one end. The male jumper wire pins can be simply inserted in to the holes on the board for the ISP connection and the elastic band stretched around the board and wires to hold them in place.</p>
+<p><img src="imgs/isp-programming.jpg" referrerpolicy="no-referrer" alt="isp-programming"></p>
+<p>If jumper wires with male pins are not available, then female wires can be used together with a 6-pin 0.1&quot; header strip. The header strip is plugged in to the jumper wires and the remaining stubby end (i.e. the end that is normally soldered in to the board) inserted in to the holes on the board.</p>
+<h4>Flash and EEPROM Programming</h4>
+<p>Programming of the microcontroller&#39;s flash and EEPROM memories can be performed a number of ways:</p>
+<ul>
+<li>Atmel Studio 7&#39;s Device Programming tool</li>
+<li><a href='https://www.nongnu.org/avrdude/'>AVRdude</a></li>
+<li>Microchip MPLAB X IPE</li>
+
+</ul>
+<p>Specific details of the programming process using these tools are a bit out of scope to be described here, but there are a number of salient points that should be noted:</p>
+<ul>
+<li><p>The board will need to be powered with 5V via the VCC pin of the ISP connection. If your programming adapter is not capable of powering a connected device, then you&#39;ll need to make alternate arrangements (e.g. a bench PSU).</p>
+</li>
+<li><p>In your programming tool, make sure to specify the correct microcontroller part - an ATtiny841.</p>
+<ul>
+<li>Note for AVRdude users: as of time of writing, the current AVRdude version (6.3) does not have built-in support for ATtiny841 microcontrollers. A custom configuration file with definitions for the ATtiny841 will need to be used. One can be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a>. Use the <code>-C</code> argument with a <code>+</code> prefix on the path to use it (e.g. <code>-C +avrdude_attiny_441_841.conf</code>), together with <code>-p t841</code> to specify the part.</li>
+
+</ul>
+</li>
+<li><p>Fuses should be programmed first. Without this, the device will not function properly (or at all!). Fuse settings are as follows:</p>
+<ul>
+<li>Extended: <code>0xF5</code></li>
+<li>High: <code>0xDC</code></li>
+<li>Low: <code>0xC2</code></li>
+
+</ul>
+</li>
+<li><p>When programming device memories, do the flash memory first and then the EEPROM. If the other way round, unless mitigating options are set in the programming software, the flash programming may also erase the EEPROM.</p>
+</li>
+
+</ul>
+<a id="wiper-stalk-modification" class="anchor"></a>
+<h3>Wiper Stalk Modification</h3>
+<p>This section documents the procedure for modification of a standard donor wiper stalk assembly, also encompassing a testing procedure for the donor unit. If you plan to modify the stalk assembly currently fitted to your vehicle, you&#39;ll need to remove it first - see the Vehicle Installation section for details. However, it is recommended to acquire a second stalk assembly to modify; then, if anything goes wrong, you still have a working original in your car.</p>
+<p>Tools and equipment required:</p>
+<ul>
+<li>Multimeter with continuity check and resistance measurement modes</li>
+<li>Soldering iron</li>
+<li>Solder</li>
+<li>Flux</li>
+<li>Vacuum de-soldering pump (a.k.a. &quot;solder sucker&quot;)</li>
+<li>Copper de-soldering braid/wick</li>
+<li>Small flat-bladed screwdriver</li>
+</ul>
+<h4>Original Circuit Board Removal</h4>
+<ol>
+<li>Apply flux to the seven solder joints of the mounting pins.</li>
+<li>For each of the joints, remove the bulk of the solder using the de-soldering vacuum pump and soldering iron.</li>
+<li>Use some de-soldering braid to wick away any remaining solder on each joint, such that none remains in the gap between the protruding pin and the perimeter of the hole. Application of additional flux may help here.</li>
+<li>Using a small flat-bladed screwdriver (or other similar tool), pry between the circuit board and the plastic body of the unit in order to lift the board from the protruding pins. Do this gently a little at a time around all sides of the board. The board may seem still rigidly stuck in place at first. With repeated gentle wiggling and prying it will soon become looser. Do not excessively lever one side of the board, as you risk bending the pins.</li>
+<li>Lift the board up and away from the unit.</li>
+<li>Inspect the vertical metal pins. They should be straight and free of any blobs of solder. If there are solder blobs remaining, try swiping them away with the iron, or use de-soldering braid to wick it off.</li>
+<li>Because the metal pins that run through into the physical switch mechanism in the body get hot during the de-soldering process, some of the mechanism&#39;s lubricating grease may have melted and seeped out from the gaps in the side of the unit. If so, clean it off.</li>
+
+</ol>
+<h4>Stalk Switch Mechanism Testing</h4>
+<p>Before installing the new PCB, it is wise to ascertain that the physical switching mechanisms of your donor wiper stalk assembly are actually working correctly and with acceptable characteristics. This procedure will help satisfy that everything is working okay. Follow the steps with reference to the table below when called for.</p>
+<p><img src="imgs/wiper-switch-assy-test-table.png" referrerpolicy="no-referrer" alt="wiper-switch-assy-test-table"></p>
+<p>Note: alphabetical pin labels reference the following pin-out diagram. This depicts the pins of the main connector on the stalk assembly when viewed with the unit in a position where the stalk is pointing to the right and the connector facing towards you.</p>
+<p><img src="imgs/wiper-switch-assy-pinout.png" referrerpolicy="no-referrer" alt="wiper-switch-assy-pinout"></p>
+<ol>
+<li>Put your multimeter in continuity-check mode. Following the table above, for each switch position (i.e. row of the table), verify continuity exists between the pairs of connector pins shown. (For the modes marked †, it&#39;s not possible to test these with the original circuit board removed.)</li>
+<li>Put your meter in resistance mode. If non auto-ranging, select the lowest range available. Measure again for each switch position and pair of pins shown in the table above, but this time measuring the resistance of the connection between the two pins. Each should be very low resistance, reading less than 1.0Ω (or 1000mΩ).</li>
+<li>Turn the stalk assembly over so that the area with the vertical metal pins (previously occupied by the circuit board) is showing.</li>
+<li>Set your meter back to continuity-check mode. Switch the stalk to the &#39;INT&#39; position and verify that continuity exists between the two vertical pins in the center of the switch body.</li>
+<li>With your meter back in resistance mode (lowest range if manual), also measure the resistance value between the same two pins. Again, this should be very low resistance, reading less than 1.0Ω (or 1000mΩ).</li>
+<li>Switch the stalk back to the &#39;OFF&#39; position.</li>
+
+</ol>
+<p>If at any stage during these testing steps you encountered an abnormality (lack of continuity or high resistance), if it&#39;s not due to an obvious cause (e.g. damage to the assembly), you&#39;ll probably be able to remedy the issue by disassembling the stalk assembly to clean and re-grease the internal switch contacts. The stalk assembly can be disassembled by removing the two philips-head screws and undoing the three clips on the opposite side.</p>
+<h4>New Circuit Board Installation</h4>
+<ol>
+<li>Take the new circuit board and place it on to the back of the stalk assembly, so that the two plastic pegs locate in to the hole and notch at either side of the board, and that the metal pins slot through their matching hole. The board will only fit in one orientation. The fit over the pins may be quite snug, but you shouldn&#39;t need to use any force to push it down.</li>
+<li>Solder each pin. Use enough such that a fillet of solder exists all around the pin. If the joint becomes a dome or spherical blob, you&#39;ve used too much. It may take a while to melt the solder, due to the heat-sinking of the switch pins.</li>
+<li>Take the 2-pin plug that comes from the stalk and plug it in. Ensure the black sleeve is located at the plug end; it may have slipped down, so slide it back if so. Tuck the wiring back in to the slot in the stalk.</li>
+
+</ol>
+<a id="vehicle-installation" class="anchor"></a>
+<h3>Vehicle Installation</h3>
+<p>Here is a brief description of how to install the modified wiper stalk assembly in the RX-8. There isn&#39;t scope to provide very detailed instructions, but as the factory service manual is easily available, consult that for more information.</p>
+<p>Before doing any work, it is advisable to disconnect power from the vehicle by removing the negative battery terminal. <strong>Caution:</strong> before doing so, ascertain whether or not there is a security code on the radio! If so, make sure you have the code.</p>
+<h4>Wiper Stalk Assembly</h4>
+<ol>
+<li>Remove the panel underneath the steering column.</li>
+<li>Undo the three screws from the lower half of the steering column cover.</li>
+<li>Separate the two halves - upper and lower - of the steering column cover. This may require some force, but be careful not to break any of the plastic tabs that clip the two halves together.</li>
+<li>Unplug the white six-way wiring harness connector from the wiper stalk assembly.</li>
+<li>Undo the two screws holding the wiper stalk assembly to the steering column and remove it.</li>
+<li>If currently fitted, remove the translucent plastic cover from the rear of the unit. Plug in the VSS wire, and route it out through one of the cut-outs on either side of the main stalk assembly connector. Install the cover.</li>
+<li>Install the wiper stalk assemble to the steering column and fasten with the two screws.</li>
+<li>Re-connect the main wiring harness plug to the wiper stalk assembly.</li>
+
+</ol>
+<h4>VSS Wiring Connection</h4>
+<p>There are several places in the RX-8 that the VSS wiring can be tapped in to, but access to some of these places varies depending on whether the vehicle is left- or right-hand drive. The simplest (albeit not the convenient) universally-applicable location, regardless of LHD or RHD, is on the wiring harness of the main audio head unit.</p>
+<ol>
+<li>Remove the audio head unit from the centre console. The exact procedure is too involved to describe here; consult the factory service manual or other third-party guides for details. It involves first removing several other parts, such as the gear stick panel, ash tray, ventilation grilles, etc.</li>
+<li>Take the widest connector that was plugged in to the audio unit, and locate amongst its wires the one that is green with red stripe (green/red). It should be near the middle of the connector. This is the VSS wire.</li>
+<li>Run the additional VSS connection wire from the wiper stalk down the steering column and under the dashboard to the centre console. Secure it to the existing wiring harness with zip ties.</li>
+<li>Use a splice or tap to connect the additional VSS wire to the previously-located VSS wire of the audio unit&#39;s harness.</li>
+<li>Replace the audio head unit and other trim pieces.</li>
+
+</ol>
+</section>
+<section>
+<a id="firmware" class="anchor"></a>
+<h2>Firmware</h2>
+<p>This section will describe the general principles of operation of the firmware running on the microcontroller. Some details on how the various peripheral features of the microcontroller are configured and used are also presented.</p>
+<p>The firmware is programmed in the C language, and was developed using <a href='https://www.microchip.com/mplab/avr-support/atmel-studio-7'>Atmel Studio 7</a> - a Microsoft Visual Studio-based IDE that uses the open-source <a href='https://gcc.gnu.org/'>GCC</a> compiler and the <a href='https://www.nongnu.org/avr-libc/'>avr-libc</a> standard library.</p>
+<p>Below is a flow chart illustrating the firmware operation (click for larger):</p>
+<p><a href='imgs/firmware-flowchart.svg'><img src="imgs/firmware-flowchart.svg" referrerpolicy="no-referrer" alt="firmware-flow-chart"></a></p>
+<p>The main loop of the program is fairly simple. It polls for changes to the state of the intermittent mode or wash switches (which are actually read by a pin-change interrupt whenever they are switched). When neither are active, the microcontroller is put to sleep, to await being woken by the next pin-change interrupt. When either is active, some branching logic assesses what action to take.</p>
+<p>When the intermittent mode switch is active, we need to activate the wipers. Whether the configured inter-wipe interval delay occurs before wiping is dependent on whether the intermittent mode switch has previously been active last time through the main loop. This because the user will want an immediate wipe when they first move the stalk to the &#39;INT&#39; position.</p>
+<p>When the wash switch is active - and has not been active on the previous main loop iteration, because we only want to perform the wash-wipe operation once even if the stalk switch is held - the wash-wipe procedure is performed.</p>
+<p>The decision on what wiping interval length to use, according to user input and vehicle speed, is made using lookup tables that are stored as part of the configuration information. Firstly, the latest ADC reading (ADC is read asynchronously by interrupt) is compared to a table of thresholds that map ADC value to a value in the range 0-8. This becomes the &#39;commanded&#39; intermittent &#39;volume&#39; setting. The commanded setting and speed are then used to do a lookup into a 2D mapping table, which defines our speed-sensitive behaviour.</p>
+<p><img src="imgs/speed-interval-mapping.png" referrerpolicy="no-referrer" alt="speed-interval-mapping"></p>
+<p>The result from the lookup becomes the &#39;actual&#39; setting. Should the vehicle speed exceed the bounds of the table, then the commanded setting is just passed through as the actual setting unchanged. Finally, one last table lookup is performed, to map the actual setting to an inter-wipe delay interval (in milliseconds).</p>
+<p>Where delays or timeouts are used (e.g. in wiping interval, or autostop timeouts), the general principle is that the current system timestamp (essentially milliseconds since power-on) is recorded as a start time, and then a loop is entered until the difference between that start time and the current system timestamp is greater than the required delay or timeout value. The system timestamp is updated asynchronously by a timer interrupt.</p>
+<a id="adc" class="anchor"></a>
+<h3>ADC</h3>
+<p>For our intermittent mode &#39;volume&#39; knob potentiometer input, our hardware design gives us an analogue input voltage which is between zero and near 2.2V. This we will read with the microcontroller&#39;s 10-bit ADC, which will provide us with a value between 0 and 1023.</p>
+<p>The ADC is configured to use the internal 2.2V reference voltage. External reference via the AREF pin is disabled, because we are using that pin of the microcontroller for other purposes.</p>
+<a id="timers" class="anchor"></a>
+<h3>Timers</h3>
+<p>The ATtiny841 features three timer-counters, and we use all of them.</p>
+<p>The first, Timer 0, is used for measuring the frequency of the VSS input. We use the signal itself as the clock source of the timer, which means it increments its counter at each rising edge of the VSS square wave. Frequency (in Hz) is calculated by measuring the value accumulated by the counter over a period of one second. To cater for the (albeit unlikely) situation where frequency is greater than 255 Hz (Timer 0 is 8-bit, so that is the maximum value of the counter), we use the timer&#39;s overflow interrupt to increment a separate &#39;overflow&#39; counter, which we then factor in (as a multiple of 255) to the final frequency measurement.</p>
+<p>Timer 1 is used to for two purposes, and is set up to generate an interrupt at a rate of 4 times per second. The first purpose is to automatically trigger ADC sampling of the intermittent volume control pot. The other is to gate the VSS frequency measurement at a rate of 1 Hz, which is accomplished by only doing that every fourth interrupt invocation.</p>
+<p>Timer 2 is used as a system clock or &#39;sys-tick&#39; of sorts. It is set up to run and trigger an interrupt at 1,000 Hz, where a timestamp value is simply incremented. This timestamp is essentially the number of milliseconds elapsed since power-on. It is used elsewhere to manage timeouts, etc.</p>
+<a id="serial-uart" class="anchor"></a>
+<h3>Serial UART</h3>
+<p>The UART is configured to run at a baud rate of 57,600 bps, with 8 data bits, no parity and 1 stop bit (a.k.a. &quot;8N1&quot;). Higher baud rates (e.g. 115.2 kbps) would be desirable, but the main clock of 8 MHz precludes doing so with any useable accuracy. Even 57.6 kbps is not achievable without straying outside the conventional 2% bit period tolerance - we must increase to 4% (using the <code>BAUD_TOL</code> define of <code>setbaud.h</code>).</p>
+<p>So that we can use standard output functions such as <code>printf()</code> to send data to the UART, we provide <code>putchar()</code> and <code>getchar()</code> functions that handle transmitting and receiving, and we tell the standard library that we want to use these when data is sent to <code>stdout</code>. Just a basic blocking UART implementation is used - that is, execution does not continue until the data to be sent has been transmitted.</p>
+<a id="eeprom" class="anchor"></a>
+<h3>EEPROM</h3>
+<p>All operational parameters, such as the lookup table, etc. are stored in the microcontroller&#39;s internal EEPROM. The ATtiny841 gives us 512 bytes to play with, but  we don&#39;t use anywhere near that. The table below describes the layout of data stored within the EEPROM.</p>
+<figure><table>
+<thead>
+<tr><th>Offset (Hex)</th><th>Length (Bytes)</th><th>Data Type</th><th>Description</th></tr></thead>
+<tbody><tr><td>0x0000</td><td>1</td><td>Signed 8-bit integer</td><td>Internal oscillator calibration adjustment value.</td></tr><tr><td>0x0001</td><td>18</td><td>Array of 9 unsigned 16-bit integers</td><td>Intermittent volume control knob ADC thresholds. Each array value must be between 0 and 1023. The array is expected to be an ascending progression of unique values.</td></tr><tr><td>0x0013</td><td>18</td><td>Array of 9 unsigned 16-bit integers</td><td>Intermittent volume control knob wiper intervals, in milliseconds. Each array value must be between 1 and 65534. The array is expected to be an ascending progression of unique values.</td></tr><tr><td>0x0025</td><td>2</td><td>Unsigned 16-bit integer</td><td>Wash-wipe timeout value, in milliseconds. Must be a value between 1 and 65534.</td></tr><tr><td>0x0027</td><td>1</td><td>Unsigned 8-bit integer</td><td>Wash-wipe count. Must be a value between 1 and 254.</td></tr><tr><td>0x0028</td><td>10</td><td>Array of 5 unsigned 16-bit integers</td><td>Speed map VSS thresholds, in MPH. Each array value must be between 0 and 250. The array is expected to be an ascending progression of unique values.</td></tr><tr><td>0x0032</td><td>45</td><td>Two-dimensional array, 5x9, of unsigned 8-bit integers</td><td>Speed map intermittent volume settings. Each array value must be between 0 and 8.</td></tr></tbody>
+</table></figure>
+<p>The data is thoroughly validated at start-up. Values are checked to see if they are in the correct range, and lookup table data is checked to see if it is in the proper order. Should anything be amiss, a hard-coded default set of configuration data is used. For the intermittent &#39;volume&#39; knob thresholds, this may or may not suit the particular stalk assembly it is attached to, but that is an unavoidable compromise.</p>
+<p>The EEPROM data can be altered and re-programmed independently of the code in flash, so possession of the firmware code or development toolchain is not needed.</p>
+<a id="sleep-mode" class="anchor"></a>
+<h3>Sleep Mode</h3>
+<p>When the microcontroller is put to sleep in standby, we use the Power Down mode for maximum power saving. In this mode, clocks are stopped, and only certain things can wake the microcontroller: the watchdog, external pin interrupts, and some UART and I2C events.</p>
+<p>Before sleeping, we also switch off the peripherals we are using (timers, UART, and ADC), which further saves power. They are re-enabled immediately after waking from sleep.</p>
+<a id="fuses" class="anchor"></a>
+<h3>Fuses</h3>
+<p>The ATtiny, like other AVR microcontrollers, uses resettable e-fuses to configure various aspects of the chip. There are some we need to change from the defaults:</p>
+<ul>
+<li>Brown-out detection enabled and set to a 4.3V threshold. This means that the chip will put (and hold) itself in reset if the supply voltage drops below 4.3V. The default of 1.8V caused problems at power-off due to the slow voltage ramp-down from capacitance in the 5V power rail.</li>
+<li>Disable division of the clock frequency by 8, so it is running at full speed.</li>
+
+</ul>
+<p>All others we leave at the defaults, including running on the internal 8 MHz oscillator, and of course having SPI programming and the reset pin enabled - without which it would not be possible to flash the chip through the ISP header!</p>
+<p>A mention should be given here to the &#39;CKOUT&#39; fuse that controls whether the oscillator&#39;s clock signal is output on pin PB2 (CLKO). Provision was made in the hardware design for the clock frequency to be measured on that pin by programming this fuse bit and removing zero-ohm resistor R12 (see schematic). This was initially used to formulate an OSCCAL value to trim the internal oscillator so that it runs as close to a true 8 MHz as possible.</p>
+</section>
+<section>
+<a id="questions-and-answers" class="anchor"></a>
+<h2>Questions &amp; Answers</h2>
+<p><strong>Does this work on the second-generation 2009-2012 (a.k.a. &quot;series 2&quot;, &quot;kouki&quot;) RX-8?</strong></p>
+<p>Maybe. Second-gen premium models are equipped with automatic lights and wipers; for those, it will not work. (And why would you even need it?) For other basic models, it <em>might</em> work. I haven&#39;t encountered any to be able to find out - all 2nd-gen models sold in the UK were premium &#39;R3&#39; models - and neither have I inspected a wiper stalk assembly (which, if memory serves, are a slightly different design).</p>
+<p><strong>Will this work on the third-generation 2005-2014 (a.k.a. &quot;NC&quot;, Mk3&quot;) MX-5 / Miata / Roadster?</strong></p>
+<p>No. The reason is that - as far as my research has found, which includes looking at the factory wiring diagrams - the third-generation MX-5 does not provide a vehicle speed signal (VSS) in its wiring harness.</p>
+<p>Vehicles with automatic transmissions <em>do</em> have a speed sensor that is labelled &#39;VSS&#39;, but: a) this only goes direct to the Transmission Control Module (TCM) and nowhere else, and; b) is not a suitable type of signal.</p>
+<p><strong>Will this work on the first-generation 2002-2008 Mazda 6?</strong></p>
+<p>No. By outward appearance, the Mazda 6 uses the same wiper stalk assembly, but because the 6 has a rear windscreen wiper, there is additional circuitry to handle that, which makes it incompatible.</p>
+<p><strong>Why are there no pin headers to be soldered to the PCB for the ISP and UART?</strong></p>
+<p>The main reason is that the plastic cover will not fit on to the wiper stalk assembly if headers are fitted. If you need to, use only right-angle headers. Be warned that when a vertical header is fitted, you can no longer actually fit the stalk assembly to the steering column!</p>
+<p>I only ever used soldered-in headers during development and testing to provide a solid connection. They aren&#39;t necessary for one-off use (e.g. using the ISP for initial programming of the microcontroller). Common male &#39;DuPont&#39;-style jumper wires can be simply inserted in to the holes and held there by hand, or an elastic band can be stretched around the body of the stalk assembly and wires to hold them.</p>
+</section>
+<section>
+<a id="improvements-and-changes" class="anchor"></a>
+<h2>Improvements &amp; Changes</h2>
+<p>These are things that I would change or do differently in future.</p>
+<p>Hardware:</p>
+<ul>
+<li>Add an AND-gate on the intermittent mode switch output and relay coil control. This would implement a safeguard that makes it impossible to activate the relay unless the stalk is switched to the &#39;INT&#39; position. Bad things might happen if, for example, the relay were to be activated and supply power to the low-speed wiper motor winding while it is already running on the fast-speed winding (stalk position &#39;2&#39;).</li>
+<li>Not use a ceramic capacitor (C2 on the schematic) immediately at the power input. Ceramics have very, very low ESR, which means that in-rush current at power-on will be high, and does nothing to help quell adverse inductive spikes from long cabling. It would be better to use an electrolytic here, but I couldn&#39;t find the room to mount one on the underside in that area of the board. Perhaps some major re-arrangement would help.</li>
+<li>Reduce the capacity of electrolytic capacitor C3. 100µF is probably overkill, and could probably be halved (47µF) or quartered (22µF); possibly even less, like 10µF.</li>
+<li>I&#39;m not convinced the schottky polarity-protection diodes on the various inputs (D4, D5, D7) are actually necessary. The adjacent zener diode (when acting forward-biased) would probably do the job.</li>
+<li>Use a higher voltage zener D1 on the relay coil circuit. If VBAT were to surge above 18V, it will conduct and activate the relay when not wanted. The purpose of this zener is to protect the transistor Q1 against turn-off inductive spikes from the relay coil. The voltage rating necessary depends on the Vce rating of the transistor. I used a BC846 which is rated to 60V, so a zener of 30V+ would probably be better.</li>
+<li>Use a latching connector for the VSS input. The current design uses a JST XH-series connector. This could be substituted for a JST XA-series, which is essentially identical to the XH, but with latches. The overall height when the plug is mated is a couple of millimeters taller, but there should still be room.</li>
+<li>Eliminate the zero-ohm link R12. The connected microcontroller pin alternately functions as CLKOUT (set by e-fuse), which outputs the main clock frequency. Because the micro is running on its internal 8 MHz oscillator, which to be accurate needs software adjustment when running on 5V (the factory calibration is for 3V), I envisioned a need to measure and determine a calibration value for each individual chip. This could be accomplished by only populating R12 after this was done (so the autostop input protection circuitry wouldn&#39;t affect anything). But, it turns out that all the chips I&#39;ve used to-date have been just fine with the same oscillator calibration value across the board.</li>
+
+</ul>
+<p>Software:</p>
+<ul>
+<li>Add a CRC to the configuration data stored in EEPROM.</li>
+<li>Possibly use a different method of reading the VSS frequency. The existing method gates the measurement at one second intervals, so therefore the speed value is only updated once per second. It would be nicer to have a more &#39;real-time&#39; update of speed.</li>
+<li>Fix the non-blocking UART code.</li>
+
+</ul>
+</section>
+
+<footer>
+<p>Copyright &copy; 2020 Basil Hussain</p>
+<p>Vérité 8x16 web font by <a href="https://int10h.org/oldschool-pc-fonts/" target="_blank">VileR</a></p>
+</footer>
+
+</main>
+
+</div>
+
+</body>
+</html>

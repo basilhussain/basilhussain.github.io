@@ -1,0 +1,258 @@
+/*
+@font-face {
+	font-family: 'IBM VGA 8x16';
+	src: url(Web_IBM_VGA_8x16.woff) format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+@font-face {
+	font-family: 'IBM DOS ISO8';
+	src: url(Web_IBM_DOS_ISO8.woff) format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+*/
+
+@font-face {
+	font-family: 'Vérité 8x16';
+	src: url(Web_Verite_8x16.woff) format('woff');
+	font-weight: normal;
+	font-style: normal;
+}
+
+body {
+	margin: 0;
+	font-family: 'Vérité 8x16', monospace;
+	/*
+	font-family: 'IBM DOS ISO8', monospace;
+	font-family: 'IBM VGA 8x16', monospace;
+	*/
+	font-size: 16px;
+	line-height: 16px;
+	background-color: #0f0f0f;
+	color: #d0d0d0;
+	text-align: center;
+}
+
+::selection {
+	background-color: #008000;
+	color: #fff;
+}
+
+#nav {
+	text-align: left;
+}
+
+#nav .nav-contents h4:first-child {
+	padding: 0 0 7px;
+	border-bottom: 1px solid #0a0;
+	color: #0a0;
+}
+
+@media screen and (max-width: 1000px) {
+	#container {
+		display: grid;
+		grid-template-columns: 100%;
+		grid-template-rows: auto 1fr;
+	}
+	
+	#nav {
+		position: sticky;
+		top: 0;
+		text-align: left;
+		background-color: #000;
+	}
+
+	#nav .nav-mobile {
+		height: 40px;
+		font-size: 24px;
+		background-color: #808080;
+	}
+
+	#nav .nav-mobile #nav-burger {
+		display: inline-block;
+		padding: 0.5em 1ch;
+		color: #000;
+	}
+
+	#nav .nav-contents {
+		height: calc(100vh - 40px);
+		overflow: hidden auto;
+		padding: 0 1ch;
+		display: none;
+	}
+
+	#nav .nav-contents.nav-shown {
+		display: block;
+	}
+
+	#nav .nav-contents h4:first-child {
+		display: none;
+	}
+
+	a.anchor {
+		display: block;
+		position: relative;
+		top: -60px;
+		visibility: hidden;
+	}
+}
+
+@media screen and (min-width: 1000px) {
+	#container {
+		max-width: 960px;
+		margin: 0 auto;
+		display: grid;
+		grid-template-columns: 170px 780px;
+		grid-template-rows: 100%;
+		grid-column-gap: 10px;
+	}
+	
+	#nav .nav-mobile {
+		display: none;
+	}
+	
+	#nav .nav-contents {
+		position: sticky;
+		top: 0;
+		height: 100vh;
+		overflow: hidden auto;
+	}
+}
+
+#nav .nav-contents dl > dt {
+	margin-top: 1em;
+}
+
+#nav .nav-contents dl > dd {
+	margin-left: 0;
+}
+
+#nav .nav-contents dl > dd::before {
+	content: "\2192\A0";
+	color: #0a0;
+}
+
+section {
+	margin-bottom: 2em;
+	padding: 1em 1.5ch;
+	background-color: #292929;
+	text-align: left;
+}
+
+section p:last-child {
+	margin-bottom: 0;
+}
+
+section p > img:only-child, section p > a:only-child > img:only-child {
+	display: block;
+	margin: 0 auto;
+	max-width: 100%;
+	border: 1px solid #0f0f0f;
+}
+
+h2, h3, h4 {
+	font-size: 100%;
+	font-weight: normal;
+	text-align: left;
+}
+
+h1 {
+	color: #fff;
+	background-color: #0a0;
+	font-size: 175%;
+	font-weight: normal;
+	text-align: center;
+	text-transform: uppercase;
+	line-height: 95%;
+	padding: 9px 8px 7px;
+	margin: 16px 16px 40px;
+	box-shadow: 8px 9px 0 0 #292929;
+}
+
+h2 {
+	padding: 0 0 7px;
+	margin: 0 0 24px -.3px;
+	color: #0a0;
+	border-bottom: 1px solid #0a0;
+	text-transform: uppercase;
+}
+
+h3 {
+	margin-top: 2em;
+	color: #0a0;
+}
+
+h4 {
+	color: #57b357;
+}
+
+a {
+	color: #00c6c6;
+	text-decoration: none;
+}
+
+a:hover {
+	background-color: #00c6c6;
+	color: #0f0f0f;
+}
+
+a:active {
+	background-color: #fff;
+	color: #0f0f0f;
+}
+
+a:visited {
+	color: #008989;
+}
+
+a:visited:hover {
+	color: #0f0f0f;
+}
+
+strong {
+	font-weight: normal;
+	color: #fff;
+}
+
+ul {
+	list-style-type: square;
+}
+
+figure {
+	overflow-x: auto;
+	margin-left: 0;
+	margin-right: 0;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+th {
+	font-weight: normal;
+	color: #fff;
+	vertical-align: bottom;
+}
+
+th, td {
+	border: 1px solid #d0d0d0;
+	padding: 0.5em 1ch;
+}
+
+code {
+	font-family: inherit;
+	background-color: #d0d0d0;
+	color: #0f0f0f;
+	padding: 0 0.5ch;
+}
+
+footer {
+	margin-bottom: 1em;
+	color: #808080;
+}
+
+footer p {
+	margin: 0.25em;
+}
