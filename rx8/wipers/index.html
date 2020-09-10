@@ -600,9 +600,15 @@
 <p>Vehicles with automatic transmissions <em>do</em> have a speed sensor that is labelled &#39;VSS&#39;, but: a) this only goes direct to the Transmission Control Module (TCM) and nowhere else, and; b) is not a suitable type of signal.</p>
 <p><strong>Will this work on the first-generation 2002-2008 Mazda 6?</strong></p>
 <p>No. By outward appearance, the Mazda 6 uses the same wiper stalk assembly, but because the 6 has a rear windscreen wiper, there is additional circuitry to handle that, which makes it incompatible.</p>
+<p><strong>Can I buy one?</strong></p>
+<p>Not a complete wiper stalk assembly, no. I have in the past performed the modification to donor wiper stalks other people have sent me, but I didn't sell complete units ex-stock.</p>
+<p>As far as boards go, while I still have several spare PCBs, I'm not sure whether I still have all the components required to assemble a board. Send me an e-mail (see page footer for address).</p>
 <p><strong>Why are there no pin headers to be soldered to the PCB for the ISP and UART?</strong></p>
 <p>The main reason is that the plastic cover will not fit on to the wiper stalk assembly if headers are fitted. If you need to, use only right-angle headers. Be warned that when a vertical header is fitted, you can no longer actually fit the stalk assembly to the steering column!</p>
 <p>I only ever used soldered-in headers during development and testing to provide a solid connection. They aren&#39;t necessary for one-off use (e.g. using the ISP for initial programming of the microcontroller). Common male &#39;DuPont&#39;-style jumper wires can be simply inserted in to the holes and held there by hand, or an elastic band can be stretched around the body of the stalk assembly and wires to hold them.</p>
+<p><strong>I want to customise other firmware config parameters, such as wiper interval timings or wash-wipe count, but the EEPROM Data Calculator tool doesn't feature those.</strong></p>
+<p>You will need to edit them manually using a hex editor that supports import and export of <a href="https://en.wikipedia.org/wiki/Intel_HEX" target="_blank">Intel Hex</a> format data. Import the file to the hex editor, then with reference to the table in the section describing the EEPROM parameters, edit the relevant data. Then export back to a .hex file and write the data to the ATtiny's EEPROM.</p>
+<p>It should not be too hard to add features to the EEPROM Data Calculator tool to generate data for the other config parameters. The tool is written in HTML and Javascript. Pull requests to the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a> with enhancements are welcome.</p>
 </section>
 <section>
 <a id="improvements-and-changes" class="anchor"></a>
@@ -630,6 +636,7 @@
 
 <footer>
 <p>Copyright &copy; 2020 Basil Hussain</p>
+<p>E-mail: bas<!--dfgr345-->il (at) stas<!--sdf93j-->is&zwj;leak [dot] uk</p>
 <p>Vérité 8x16 web font by <a href="https://int10h.org/oldschool-pc-fonts/" target="_blank">VileR</a></p>
 </footer>
 
