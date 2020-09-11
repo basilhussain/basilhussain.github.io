@@ -38,7 +38,7 @@
 
 <nav id="nav">
 <div class="nav-mobile">
-<a id="nav-burger" href="#">&equiv;</a>
+<a id="nav-burger" href="#" title="Navigation">&equiv;</a>
 </div>
 <div id="nav-contents" class="nav-contents">
 <h4>Contents</h4>
@@ -215,8 +215,8 @@
 <p>Your attention is called to the upper positions. Notice anything concerning? Many of the &#39;min&#39; values of one position overlap with the &#39;max&#39; values of its neighbouring position! If it&#39;s not clear, the table below shows it more clearly:</p>
 <figure><table>
 <thead>
-<tr><th style='text-align:right;' >Setting</th><th style='text-align:right;' >0</th><th style='text-align:right;' >1</th><th style='text-align:right;' >2</th><th style='text-align:right;' >3</th><th style='text-align:right;' >4</th><th style='text-align:right;' >5</th><th style='text-align:right;' >6</th><th style='text-align:right;' >7</th><th style='text-align:right;' >8</th></tr></thead>
-<tbody><tr><td style='text-align:right;' ><strong>Smallest Min</strong></td><td style='text-align:right;' >0.0</td><td style='text-align:right;' >1.3</td><td style='text-align:right;' >7.6</td><td style='text-align:right;' >13.8</td><td style='text-align:right;' >21.4</td><td style='text-align:right;' ><em>27.6</em></td><td style='text-align:right;' ><em>33.7</em></td><td style='text-align:right;' ><em>40.3</em></td><td style='text-align:right;' ><em>42.7</em></td></tr><tr><td style='text-align:right;' ><strong>Largest Max</strong></td><td style='text-align:right;' >1.2</td><td style='text-align:right;' >6.1</td><td style='text-align:right;' >12.8</td><td style='text-align:right;' >20.1</td><td style='text-align:right;' ><em>27.8</em></td><td style='text-align:right;' ><em>35.0</em></td><td style='text-align:right;' ><em>41.0</em></td><td style='text-align:right;' ><em>49.1</em></td><td style='text-align:right;' >50.3</td></tr></tbody>
+<tr><th style="text-align:right;">Setting</th><th style="text-align:right;">0</th><th style="text-align:right;">1</th><th style="text-align:right;">2</th><th style="text-align:right;">3</th><th style="text-align:right;">4</th><th style="text-align:right;">5</th><th style="text-align:right;">6</th><th style="text-align:right;">7</th><th style="text-align:right;">8</th></tr></thead>
+<tbody><tr><td style="text-align:right;"><strong>Smallest Min</strong></td><td style="text-align:right;">0.0</td><td style="text-align:right;">1.3</td><td style="text-align:right;">7.6</td><td style="text-align:right;">13.8</td><td style="text-align:right;">21.4</td><td style="text-align:right;"><em>27.6</em></td><td style="text-align:right;"><em>33.7</em></td><td style="text-align:right;"><em>40.3</em></td><td style="text-align:right;"><em>42.7</em></td></tr><tr><td style="text-align:right;"><strong>Largest Max</strong></td><td style="text-align:right;">1.2</td><td style="text-align:right;">6.1</td><td style="text-align:right;">12.8</td><td style="text-align:right;">20.1</td><td style="text-align:right;"><em>27.8</em></td><td style="text-align:right;"><em>35.0</em></td><td style="text-align:right;"><em>41.0</em></td><td style="text-align:right;"><em>49.1</em></td><td style="text-align:right;">50.3</td></tr></tbody>
 </table></figure>
 <p>The values in <em>italics</em> are where the smallest measured minimum of one position is lower than the largest maximum of the position immediately preceding. For example at position 7, min of 40.3 is less than max of 41.0 at position 6.</p>
 <p>What does this mean? It means we cannot just have a general one-size-fits-all set of thresholds that can be used to map our potentiometer readings to an intermittent &#39;volume&#39; setting. The solution to this will be to have a unique calibration of thresholds specific to each unit, stored in the microcontroller&#39;s non-voltatile memory.</p>
@@ -491,7 +491,7 @@
 <h4>Stalk Switch Mechanism Testing</h4>
 <p>Before installing the new PCB, it is wise to ascertain that the physical switching mechanisms of your donor wiper stalk assembly are actually working correctly and with acceptable characteristics. This procedure will help satisfy that everything is working okay. Follow the steps with reference to the table below when called for.</p>
 <p><img src="imgs/wiper-switch-assy-test-table.png" referrerpolicy="no-referrer" alt="wiper-switch-assy-test-table"></p>
-<p>Note: alphabetical pin labels reference the following pin-out diagram. This depicts the pins of the main connector on the stalk assembly when viewed with the unit in a position where the stalk is pointing to the right and the connector facing towards you.</p>
+<p>The alphabetical pin labels in the table above reference the following pin-out diagram. This depicts the pins of the main connector on the stalk assembly when viewed with the unit in a position where the stalk is pointing to the right and the connector facing towards you.</p>
 <p><img src="imgs/wiper-switch-assy-pinout.png" referrerpolicy="no-referrer" alt="wiper-switch-assy-pinout"></p>
 <ol>
 <li>Put your multimeter in continuity-check mode. Following the table above, for each switch position (i.e. row of the table), verify continuity exists between the pairs of connector pins shown. (For the modes marked †, it&#39;s not possible to test these with the original circuit board removed.)</li>
@@ -596,7 +596,7 @@
 <p><strong>Does this work on the second-generation 2009-2012 (a.k.a. &quot;series 2&quot;, &quot;kouki&quot;) RX-8?</strong></p>
 <p>Maybe. Second-gen premium models are equipped with automatic lights and wipers; for those, it will not work. (And why would you even need it?) For other basic models, it <em>might</em> work. I haven&#39;t encountered any to be able to find out - all 2nd-gen models sold in the UK were premium &#39;R3&#39; models - and neither have I inspected a wiper stalk assembly (which, if memory serves, are a slightly different design).</p>
 <p><strong>Will this work on the third-generation 2005-2014 (a.k.a. &quot;NC&quot;, Mk3&quot;) MX-5 / Miata / Roadster?</strong></p>
-<p>No. The reason is that - as far as my research has found, which includes looking at the factory wiring diagrams - the third-generation MX-5 does not provide a vehicle speed signal (VSS) in its wiring harness.</p>
+<p>No. While an RX-8 wiper stalk is a popular upgrade to add intermittent wiping to the MX-5, this won't work because - as far as my research has found, which includes looking at the factory wiring diagrams - the third-generation MX-5 does not provide a vehicle speed signal (VSS) in its wiring harness.</p>
 <p>Vehicles with automatic transmissions <em>do</em> have a speed sensor that is labelled &#39;VSS&#39;, but: a) this only goes direct to the Transmission Control Module (TCM) and nowhere else, and; b) is not a suitable type of signal.</p>
 <p><strong>Will this work on the first-generation 2002-2008 Mazda 6?</strong></p>
 <p>No. By outward appearance, the Mazda 6 uses the same wiper stalk assembly, but because the 6 has a rear windscreen wiper, there is additional circuitry to handle that, which makes it incompatible.</p>
