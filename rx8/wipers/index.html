@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-GB">
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Speed-Sensitive Windscreen Wipers Upgrade for Mazda RX-8</title>
+	<meta name="description" content="A project to add speed-sensitive windscreen wiper operation to the Mazda RX-8">
 	<link href="style/style.css" rel="stylesheet" media="screen" type="text/css">
 	<script type="text/javascript">
 		document.addEventListener("DOMContentLoaded", (event) => {
@@ -352,7 +353,7 @@
 <a id="pcb" class="anchor"></a>
 <h3>PCB</h3>
 <p>The PCB is a standard 1.6 mm thickness 2-layer board, with <strong>2 oz / 70 &micro;m</strong> copper layers.</p>
-<p>Gerber and NC drill files for the PCB can be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a>. They should be suitable for submission as-is to any decent manufacturer. Note that there are <em>two</em> drill files: one for plated through-holes (PTH), and one for non-plated through-holes (NPTH).</p>
+<p>Gerber and NC drill files for the PCB can be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank" rel="noopener">GitHub repository</a>. They should be suitable for submission as-is to any decent manufacturer. Note that there are <em>two</em> drill files: one for plated through-holes (PTH), and one for non-plated through-holes (NPTH).</p>
 <p><strong>Important:</strong> do not be tempted to have the PCBs manufactured with a 1 oz / 35 &micro;m copper layer thickness! The thicker 2 oz copper is required to handle the peak current demands with the constrained sizes of trace that can be fitted on the board.</p>
 <a id="bill-of-materials" class="anchor"></a>
 <h3>Bill of Materials</h3>
@@ -390,7 +391,7 @@
 <p>To make up the VSS wiring connection, you will need a crimping tool appropriate for JST XH terminals. Note that it only consists of a single wire, so only one terminal will be fitted to the plug; which pin of the plug is indicated by the arrow marker on the PCB silkscreen.</p>
 <a id="firmware-programming" class="anchor"></a>
 <h3>Firmware Programming</h3>
-<p>Once the complete PCB has been assembled, but before installation and use, the firmware of the microcontroller will need programming to its flash memory, and calibration and configuration data to the EEPROM. A pre-compiled firmware binary file, in Intel Hex format, may be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a>. Alternatively, if desired, the firmware source code may be compiled from scratch.</p>
+<p>Once the complete PCB has been assembled, but before installation and use, the firmware of the microcontroller will need programming to its flash memory, and calibration and configuration data to the EEPROM. A pre-compiled firmware binary file, in Intel Hex format, may be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank" rel="noopener">GitHub repository</a>. Alternatively, if desired, the firmware source code may be compiled from scratch.</p>
 <p>Programming is performed using the ISP header on the board, using the SPI protocol. You will need a compatible programming adapter, such as one of the following:</p>
 <ul>
 <li>Atmel AVR-ISP MkII</li>
@@ -427,7 +428,7 @@
 
 </ul>
 </li>
-<li><p>Enter these readings into the EEPROM Data Calculator tool (to be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a>). Save the generated data in to a file named with a &#39;.hex&#39; extension. This will be used later to program the microcontroller&#39;s EEPROM.</p>
+<li><p>Enter these readings into the EEPROM Data Calculator tool (to be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank" rel="noopener">GitHub repository</a>). Save the generated data in to a file named with a &#39;.hex&#39; extension. This will be used later to program the microcontroller&#39;s EEPROM.</p>
 </li>
 
 </ol>
@@ -449,7 +450,7 @@
 </li>
 <li><p>In your programming tool, make sure to specify the correct microcontroller part - an ATtiny841.</p>
 <ul>
-<li>Note for AVRdude users: as of time of writing, the current AVRdude version (6.3) does not have built-in support for ATtiny841 microcontrollers. A custom configuration file with definitions for the ATtiny841 will need to be used. One can be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a>. Use the <code>-C</code> argument with a <code>+</code> prefix on the path to use it (e.g. <code>-C +avrdude_attiny_441_841.conf</code>), together with <code>-p t841</code> to specify the part.</li>
+<li>Note for AVRdude users: as of time of writing, the current AVRdude version (6.3) does not have built-in support for ATtiny841 microcontrollers. A custom configuration file with definitions for the ATtiny841 will need to be used. One can be found in the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank" rel="noopener">GitHub repository</a>. Use the <code>-C</code> argument with a <code>+</code> prefix on the path to use it (e.g. <code>-C +avrdude_attiny_441_841.conf</code>), together with <code>-p t841</code> to specify the part.</li>
 
 </ul>
 </li>
@@ -608,8 +609,8 @@
 <p>The main reason is that the plastic cover will not fit on to the wiper stalk assembly if headers are fitted. If you need to, use only right-angle headers. Be warned that when a vertical header is fitted, you can no longer actually fit the stalk assembly to the steering column!</p>
 <p>I only ever used soldered-in headers during development and testing to provide a solid connection. They aren&#39;t necessary for one-off use (e.g. using the ISP for initial programming of the microcontroller). Common male &#39;DuPont&#39;-style jumper wires can be simply inserted in to the holes and held there by hand, or an elastic band can be stretched around the body of the stalk assembly and wires to hold them.</p>
 <p><strong>I want to customise other firmware config parameters, such as wiper interval timings or wash-wipe count, but the EEPROM Data Calculator tool doesn't feature those.</strong></p>
-<p>You will need to edit them manually using a hex editor that supports import and export of <a href="https://en.wikipedia.org/wiki/Intel_HEX" target="_blank">Intel Hex</a> format data. Import the file to the hex editor, then with reference to the table in the section describing the EEPROM parameters, edit the relevant data. Then export back to a .hex file and write the data to the ATtiny's EEPROM.</p>
-<p>It should not be too hard to add features to the EEPROM Data Calculator tool to generate data for the other config parameters. The tool is written in HTML and Javascript. Pull requests to the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank">GitHub repository</a> with enhancements are welcome.</p>
+<p>You will need to edit them manually using a hex editor that supports import and export of <a href="https://en.wikipedia.org/wiki/Intel_HEX" target="_blank" rel="noopener">Intel Hex</a> format data. Import the file to the hex editor, then with reference to the table in the section describing the EEPROM parameters, edit the relevant data. Then export back to a .hex file and write the data to the ATtiny's EEPROM.</p>
+<p>It should not be too hard to add features to the EEPROM Data Calculator tool to generate data for the other config parameters. The tool is written in HTML and Javascript. Pull requests to the <a href="https://github.com/basilhussain/rx8-wipers" target="_blank" rel="noopener">GitHub repository</a> with enhancements are welcome.</p>
 </section>
 <section>
 <a id="improvements-and-changes" class="anchor"></a>
@@ -638,7 +639,7 @@
 <footer>
 <p>Copyright &copy; 2020 Basil Hussain</p>
 <p>E-mail: bas<!--dfgr345-->il (at) stas<!--sdf93j-->is&zwj;leak [dot] uk</p>
-<p>Vérité 8x16 web font by <a href="https://int10h.org/oldschool-pc-fonts/" target="_blank">VileR</a></p>
+<p>Vérité 8x16 web font by <a href="https://int10h.org/oldschool-pc-fonts/" target="_blank" rel="noopener">VileR</a></p>
 </footer>
 
 </main>

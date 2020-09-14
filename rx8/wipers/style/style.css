@@ -3,6 +3,7 @@
 	src: url(Web_IBM_VGA_8x16.woff) format('woff');
 	font-weight: normal;
 	font-style: normal;
+	font-display: swap;
 }
 
 @font-face {
@@ -10,6 +11,7 @@
 	src: url(Web_Verite_8x16.woff) format('woff');
 	font-weight: normal;
 	font-style: normal;
+	font-display: swap;
 }
 
 body {
