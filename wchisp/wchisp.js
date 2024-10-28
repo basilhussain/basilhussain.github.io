@@ -224,7 +224,12 @@ function logMessage(msg, date, levelName, levelShortName) {
 		
 		const time = document.createElement("span");
 		time.classList.add("time");
-		time.textContent = date.toLocaleTimeString();
+		time.textContent = date.toLocaleTimeString([], {
+			hour: "2-digit",
+			minute: "2-digit",
+			second: "2-digit",
+			fractionalSecondDigits: 3
+		});
 		
 		const level = document.createElement("span");
 		level.classList.add("level", levelName.toLowerCase());

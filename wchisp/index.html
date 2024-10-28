@@ -148,7 +148,7 @@
 				<h3>How do I get my device to run the bootloader?</h3>
 				<p>Methods vary between different device families. See your device's reference manual for details.</p>
 				<p>For devices with BOOT0 and BOOT1 pins (see device datasheet), typically the pin logic levels required at reset to start the device into the bootloader are: BOOT0 = 1, BOOT1 = 0.</p>
-				<p>For devices without BOOTn pins (e.g. CH32V003), the user application code is responsible for instructing the device to enter the bootloader at next reset; see device reference manual.</p>
+				<p>For devices without BOOTn pins, other GPIO pins may control boot mode (e.g. CH32X03x), or the user application code is responsible for instructing the device to enter the bootloader at next reset (e.g. CH32V003); see device documentation for details.</p>
 			</hgroup>
 			
 			<hgroup>

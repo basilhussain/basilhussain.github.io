@@ -22,6 +22,11 @@ export class Transceiver {
 				parity: "none",
 				flowControl: "none"
 			});
+			
+			// Flush the port's reading stream. For some reason, sometimes a
+			// spurious 0x0 byte is waiting, which messes up receiving packets
+			// (because more data than expected is received).
+			await this.#port.readable.cancel();
 		} catch(err) {
 			throw new Error("Error occurred attempting to open serial port", { cause: err });
 		}
@@ -51,25 +56,27 @@ export class Transceiver {
 		
 		while(!stop && offset < bytes.length) {
 			try {
-				const { value, done } = await reader.read();
+				const { value: chunk, done } = await reader.read();
+				
+				// console.debug(iterations, chunk);
+				
 				if(done) break;
-				if(offset + value.length <= bytes.length) {
-					bytes.set(value, offset);
-					offset += value.length;
+				if(offset + chunk.length <= bytes.length) {
+					bytes.set(chunk, offset);
+					offset += chunk.length;
 				} else {
 					error = new Error("Unexpected data; received more than " + bytes.length + " bytes");
 					break;
 				}
-			} catch(e) {
+			} catch(err) {
 				// Catch the error thrown by the reader on timeout (or other
 				// error) and re-throw a more suitable error.
-				error = new Error("Timed-out after " + timeout_ms + " ms waiting to receive, or read failure");
+				error = new Error("Timed-out after " + timeout_ms + " ms waiting to receive, or read failure", { cause: err });
 				break;
 			}
+			
 			// iterations++;
 		}
-		
-		// console.debug("receive loop iterations", iterations);
 		
 		clearTimeout(timer);
 		reader.releaseLock();
