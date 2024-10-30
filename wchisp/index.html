@@ -146,9 +146,60 @@
 			
 			<hgroup>
 				<h3>How do I get my device to run the bootloader?</h3>
-				<p>Methods vary between different device families. See your device's reference manual for details.</p>
-				<p>For devices with BOOT0 and BOOT1 pins (see device datasheet), typically the pin logic levels required at reset to start the device into the bootloader are: BOOT0 = 1, BOOT1 = 0.</p>
-				<p>For devices without BOOTn pins, other GPIO pins may control boot mode (e.g. CH32X03x), or the user application code is responsible for instructing the device to enter the bootloader at next reset (e.g. CH32V003); see device documentation for details.</p>
+				<p>Methods vary between device families. Bootloader entry at reset is typically controlled by the state of one or more pins. Consult table below, or see your device's documentation.</p>
+				<table>
+					<thead>
+						<tr>
+							<th>Device Family</th>
+							<th>Control Pins<sup>1</sup></th>
+							<th>UART Pins<sup>2</sup></th>
+							<th>Notes</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>CH32V003</td>
+							<td>N/A</td>
+							<td>TX = PD5,<br />RX = PD6</td>
+							<td>User application code must instruct device to enter the bootloader via <code>FLASH_STATR.MODE</code> flag and software reset.</td>
+						</tr>
+						<tr>
+							<td>CH32L103</td>
+							<td>BOOT0 = 1,<br />BOOT1 = 0</td>
+							<td>[TBC]</td>
+							<td></td>
+						</tr>
+						<tr>
+							<td>CH32V103</td>
+							<td>BOOT0 = 1,<br />BOOT1 = 0</td>
+							<td>TX = PA9,<br />RX = PA10</td>
+							<td></td>
+						</tr>
+						<tr>
+							<td>CH32V20x</td>
+							<td>BOOT0 = 1,<br />BOOT1 = 0</td>
+							<td>[TBC]</td>
+							<td></td>
+						</tr>
+						<tr>
+							<td>CH32V30x</td>
+							<td>BOOT0 = 1,<br />BOOT1 = 0</td>
+							<td>TX = PA9,<br />RX = PA10</td>
+							<td></td>
+						</tr>
+						<tr>
+							<td>CH32X03x</td>
+							<td>PC16 = 0,<br />PC17 = 1</td>
+							<td>TX = PA2,<br />RX = PA3</td>
+							<td>Bootloader can only be entered from power-on reset?</td>
+						</tr>
+					</tbody>
+				</table>
+				<p>
+					<span class="note">1. '0' indicates logic-low voltage level, '1' indicates logic-high voltage level.</span><br />
+					<span class="note">2. 'TX' is transmit output from the device, 'RX' is receive input to the device.</span><br />
+				</p>
+				<p>For devices with BOOT0 and BOOT1 control pins, some package variants may have BOOT1 internally tied to GND, with only BOOT0 exposed. Other packages may not have either pin exposed, with BOOT0 tied internally to GND, effectively rendering the bootloader unusable.</p>
 			</hgroup>
 			
 			<hgroup>
@@ -193,6 +244,16 @@
 				<h3>I disabled read-protection by changing RDPR to 0xA5 and then writing the new config. Why does my microcontroller now no longer work?</h3>
 				<p>Because your flash memory got erased!</p>
 				<p>When the RDPR option byte is changed to un-protected (value 0xA5) from previously protected (any other value), the microcontroller will automatically perform a full erasure of the user application flash memory.</p>
+			</hgroup>
+			
+			<hgroup>
+				<h3>Why is there no option to read flash?</h3>
+				<p>The WCH bootloader does not support reading out the contents of flash &mdash; there is no command in the protocol to accomplish that.</p>
+			</hgroup>
+			
+			<hgroup>
+				<h3>Does my firmware data get uploaded to or saved on the server?</h3>
+				<p>No. Although it is hosted on a web server, this tool runs locally in your web browser, and any firmware file you load never leaves your computer, nor is it retained anywhere.</p>
 			</hgroup>
 			
 			<hgroup>
