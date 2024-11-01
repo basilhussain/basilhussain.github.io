@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<title>WCH Microcontroller Web Serial ISP</title>
+	<title>WCH RISC-V Microcontroller Web Serial ISP</title>
 	<link href="style.css" rel="stylesheet" />
 	<link href="images/check-small.svg" rel="preload" as="image" />
 	<link href="images/cross-small.svg" rel="preload" as="image" />
@@ -24,7 +24,7 @@
 </head>
 <body>
 	<main>
-		<h1>WCH Microcontroller Web Serial ISP</h1>
+		<h1>WCH RISC-V Microcontroller Web Serial ISP</h1>
 		
 		<div id="unsupported">
 			<p>Your browser does not appear to support the Web Serial API</p>
@@ -39,12 +39,7 @@
 				document.getElementById("unsupported").classList.add("hidden");
 			}
 		</script>
-
-		<!--
-		<p><button id="ksjdhfskjd">Help</button></p>
-		-->
-
-		<!--<div id="foo">-->
+		
 		<form id="form">
 			<section>
 				<h2>Device</h2>
@@ -57,26 +52,7 @@
 					<input id="fw_file" type="file" accept=".bin,.hex,.ihx,.srec,.s19,.s28,.s37,.elf" />
 					<span class="fw_size"><span id="fw_size_val">0</span> bytes</span>
 				</p>
-				<div id="fw_hex" class="hex">
-					<!--
-					<table class="hex">
-						<tbody class="template">
-							<tr>
-								<th></th>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-								<td></td>
-							</tr>
-						</tbody>
-						<tbody class="listing"></tbody>
-					</table>
-					-->
-				</div>
+				<div id="fw_hex" class="hex"></div>
 				<p>Choose file or drag-and-drop a file into area above. Supported formats are: Intel Hex, S-Record, ELF, raw binary.</p>
 			</section>
 			
@@ -104,7 +80,6 @@
 						<td><input id="cfg_wrpr3" type="text" size="4" maxlength="4" required pattern="(?:0[xX])?[0-9a-fA-F]{1,2}" /></td>
 					</tr>
 				</table>
-				<!-- TODO: add 'reset to device defaults' button? Will need default OB value in devices JSON -->
 				<p>Enter values in hexadecimal. See device reference manual for interpretation and appropriate values.</p>
 			</section>
 
@@ -258,14 +233,14 @@
 			
 			<hgroup>
 				<h3>The device I want to program is not listed.</h3>
-				<p>If your device's factory bootloader supports serial UART communication, then you can request it to be added by opening a new Issue on the <a href="https://github.com/basilhussain/" target="_blank">GitHub repository</a>.</p>
+				<p>If your device's factory bootloader supports serial UART communication, then you can request it to be added by opening a new Issue on the <a href="https://github.com/basilhussain/wch-web-isp/issues" target="_blank">GitHub repository</a>.</p>
 			</hgroup>
 		</section>
-		<!--</div>-->
 		
 		<footer class="footer">
-			<p>Copyright &copy; 2024 Basil Hussain.</p>
-			<p>No frameworks, no libraries, no BS &mdash; just plain JavaScript. Code on <a href="https://github.com/basilhussain/" target="_blank" class="github">GitHub</a>.</p>
+			<p>Copyright &copy; 2024 Basil Hussain. Licenced under <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">GNU AGPLv3</a>.</p>
+			<p>No frameworks, no libraries, no BS &mdash; just plain JavaScript. Source code available on <a href="https://github.com/basilhussain/wch-web-isp" target="_blank" class="github">GitHub</a>.</p>
+			<p>For more about the WCH bootloader serial protocol, see my 'missing manual' for the <a href="https://github.com/basilhussain/ch32v003-bootloader-docs" target="_blank" class="github">CH32V003 Factory Bootloader</a>.</p>
 		</footer>
 	</main>
 </body>

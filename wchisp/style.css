@@ -33,55 +33,6 @@ div#unsupported.hidden {
 	display: none;
 }
 
-/*
-#foo {
-	display: flex;
-	overflow: hidden;
-	flex-direction: row;
-	align-items: flex-start;
-	flex-wrap: nowrap;
-	border: 1px solid black;
-}
-
-#form, #help {
-	flex: 1 0 100%;
-}
-
-#foo > #form, #foo > #help {
-	animation-duration: 1.5s;
-	animation-timing-function: ease-in-out;
-	animation-name: slideright;
-	translate: 0 0;
-}
-
-#foo.help > #form, #foo.help > #help {
-	animation-duration: 1.5s;
-	animation-timing-function: ease-in-out;
-	animation-name: slideleft;
-	translate: -100% 0;
-}
-
-@keyframes slideleft {
-	from {
-		translate: 0 0;
-	}
-
-	to {
-		translate: -100% 0;
-	}
-}
-
-@keyframes slideright {
-	from {
-		translate: -100% 0;
-	}
-
-	to {
-		translate: 0 0;
-	}
-}
-*/
-
 #form section {
 	margin: 1em 0;
 	border: 2px solid #AF0000;
@@ -162,58 +113,6 @@ div.hex > span.p {
 	border-left: 1px solid black;
 	padding-left: 0.5em;
 }
-
-/*
-div.hex > div {
-	margin: 0 0.2em;
-}
-
-div.hex > div > span:first-child {
-	font-weight: bold;
-	margin-right: 0.5em;
-	border-right: 1px solid black;
-	padding-right: 0.5em;
-}
-
-div.hex > div > span:last-child {
-	font-style: italic;
-	margin-left: 0.5em;
-	border-left: 1px solid black;
-	padding-left: 0.5em;
-}
-*/
-
-/*
-table.hex {
-	font-family: monospace;
-	border-spacing: 0;
-}
-
-table.hex tbody.template {
-	display: none;
-}
-
-table.hex th, table.hex td {
-	padding: 0.1ex 0.25em 0.1ex 0.25em;
-}
-
-table.hex th {
-	text-align: right;
-	border-right: 1px solid black;
-}
-
-table.hex td {
-	text-align: left;
-}
-
-table.hex td:nth-child(odd) {
-	color: navy;
-}
-
-table.hex td:nth-child(even) {
-	color: blue;
-}
-*/
 
 table.config {
 	border-spacing: 0.5em 0.2em;

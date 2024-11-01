@@ -1,3 +1,23 @@
+/*******************************************************************************
+ *
+ * WCH RISC-V Microcontroller Web Serial ISP
+ * Copyright (c) 2024 Basil Hussain
+ * 
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * 
+ ******************************************************************************/
+
 import { IntelHexParser } from "./modules/parsers/intelhex.js";
 import { SRecordParser } from "./modules/parsers/srecord.js";
 import { ElfRiscVParser } from "./modules/parsers/elf.js";
@@ -11,28 +31,17 @@ import { Formatter } from "./modules/util.js";
 
 function clearHexListing() {
 	document.getElementById("fw_hex").replaceChildren();
-	
-	// document.querySelector("#fw_hex > table > tbody.listing").replaceChildren();
 }
 
-// TODO: this is very slow for hundreds of KB files. Find a way to make faster.
-// Rendering takes the longest.
 function createHexListing(bytes) {
 	const container = document.getElementById("fw_hex");
-	/*
-	const table = document.querySelector("#fw_hex > table");
-	const template = table.querySelector("tbody.template > tr");
-	const listing = table.querySelector("tbody.listing");
-	const groups_count = template.querySelectorAll("td").length;
-	*/
 	const offset_max_digits = bytes.length.toString(16).length;
 	const groups_count = 8;
 	const row_size = groups_count * 2;
 	
-	console.time("createHexListing");
+	// console.time("createHexListing");
 	
 	for(let i = 0; i < bytes.length; i += row_size) {
-		// 130-170ms
 		let data = "", text = "";
 		for(let j = 0; j < groups_count; j++) {
 			const n = i + (j * 2);
@@ -50,65 +59,17 @@ function createHexListing(bytes) {
 		const offset = document.createElement("span");
 		offset.classList.add("o");
 		offset.textContent = "0x" + Formatter.hex(i, offset_max_digits);
+		
 		const printable = document.createElement("span");
 		printable.classList.add("p");
 		printable.textContent = text;
-		// const row = document.createElement("div");
-		// row.append(offset, data.trimEnd(), printable);
-		// container.appendChild(row);
+		
 		const br = document.createElement("br");
+		
 		container.append(offset, data.trimEnd(), printable, br);
-		
-		/*
-		// 70-90ms!
-		let row = "0x" + Formatter.hex(i, offset_max_digits) + " |";
-		
-		for(let j = 0; j < groups_count; j++) {
-			const n = i + (j * 2);
-			row += " ";
-			if(n < bytes.length) row += Formatter.hex(bytes[n], 2);
-			if(n + 1 < bytes.length) row += Formatter.hex(bytes[n + 1], 2);
-		}
-		
-		const pre = document.createElement("pre");
-		pre.textContent = row;
-		container.appendChild(pre);
-		*/
-		
-		/*
-		// ~322ms
-		const row = document.createElement("div");
-		
-		row.append("0x" + Formatter.hex(i, offset_max_digits));
-		
-		for(let j = 0; j < groups_count; j++) {
-			const n = i + (j * 2);
-			row.append(" ");
-			if(n < bytes.length) row.append(Formatter.hex(bytes[n], 2));
-			if(n + 1 < bytes.length) row.append(Formatter.hex(bytes[n + 1], 2));
-		}
-		
-		container.appendChild(row);
-		*/
-		
-		
-		/*
-		const row = template.cloneNode(true);
-		
-		row.cells[0].innerText = "0x" + Formatter.hex(i, offset_max_digits);
-		
-		for(let j = 0; j < groups_count; j++) {
-			const n = i + (j * 2);
-			const a = (n < bytes.length ? Formatter.hex(bytes[n], 2) : "");
-			const b = (n + 1 < bytes.length ? Formatter.hex(bytes[n + 1], 2) : "");
-			row.cells[1 + j].innerText = a + b;
-		}
-		
-		listing.appendChild(row);
-		*/
 	}
 	
-	console.timeEnd("createHexListing");
+	// console.timeEnd("createHexListing");
 	
 	document.getElementById("fw_size_val").textContent = bytes.length.toLocaleString();
 }
@@ -463,12 +424,6 @@ Promise.all([contentLoaded, devicesLoaded])
 		logClear.addEventListener("click", (event) => {
 			clearLog();
 		});
-		
-		/*
-		document.getElementById("ksjdhfskjd").addEventListener("click", (event) => {
-			document.getElementById("foo").classList.toggle("help");
-		});
-		*/
 	})
 	.catch((err) => {
 		console.error(err);
