@@ -33,7 +33,7 @@ function clearHexListing() {
 	document.getElementById("fw_hex").replaceChildren();
 }
 
-function createHexListing(bytes) {
+function createHexListing(bytes, fileName) {
 	const container = document.getElementById("fw_hex");
 	const offset_max_digits = bytes.length.toString(16).length;
 	const groups_count = 8;
@@ -71,6 +71,7 @@ function createHexListing(bytes) {
 	
 	// console.timeEnd("createHexListing");
 	
+	document.getElementById("fw_name_val").textContent = fileName;
 	document.getElementById("fw_size_val").textContent = bytes.length.toLocaleString();
 }
 
@@ -214,15 +215,18 @@ Firmware.addParser(["elf"], ElfRiscVParser);
 
 const logger = new Logger(logMessage);
 const devices = new DevicesDatabase();
+const params = new URLSearchParams(window.location.search);
 
 // Create promises that resolve when devices JSON and DOM content have finished
 // loading.
-const devicesLoaded = devices.fetchDevices("devices.json");
+const devicesLoaded = devices.fetchDevicesData("devices.json");
 const contentLoaded = new Promise((resolve) => document.addEventListener("DOMContentLoaded", resolve, false));
 
 Promise.all([contentLoaded, devicesLoaded])
 	.then(() => {
 		const deviceList = document.getElementById("device_list");
+		const fwUrl = document.getElementById("fw_url");
+		const fwUrlLoad = document.getElementById("fw_url_load");
 		const fwFile = document.getElementById("fw_file");
 		const fwHex = document.getElementById("fw_hex");
 		const configRead = document.getElementById("config_read");
@@ -232,30 +236,64 @@ Promise.all([contentLoaded, devicesLoaded])
 		const flashErase = document.getElementById("flash_erase");
 		const logClear = document.getElementById("log_clear");
 		
-		let device, fw;
+		let device, firmware;
 		
 		devices.populateDeviceList(deviceList);
-		device = devices.findDevice(deviceList.value);
+		device = devices.findDeviceByIndex(deviceList.value);
+		
+		fwUrl.addEventListener("input", (event) => {
+			fwUrlLoad.disabled = !event.target.validity.valid;
+		});
+		
+		fwUrl.addEventListener("keydown", (event) => {
+			if(event.key == "Enter" && event.target.validity.valid) {
+				fwUrlLoad.dispatchEvent(new Event("click"));
+			}
+		});
+		
+		fwUrlLoad.addEventListener("click", (event) => {
+			clearHexListing();
+			
+			Firmware.fromUrl(fwUrl.value)
+				.then((fw) => {
+					logger.info("Loaded " + fw.format + " firmware file from \"" + fwUrl.value + "\"");
+					fw.fillToEndOfSegment(1024);
+					createHexListing(fw.bytes, fw.fileName);
+					checkFirmwareSize(fw.size, device["flash"]["size"]);
+					firmware = fw;
+				})
+				.catch((err) => {
+					logger.error("Failed to load firmware from URL \"" + fwUrl.value + "\"");
+					logger.error(err.message);
+					window.alert(
+						"Failed to load firmware from URL \"" + fwUrl.value + "\".\n\n" +
+						"See log for details."
+					);
+					firmware = undefined;
+					setActionButtonsEnabled(false, ["flash_write", "flash_verify"]);
+				});
+		});
 		
 		fwFile.addEventListener("change", (event) => {
 			if(fwFile.files.length > 0) {
 				clearHexListing();
-				fw = new Firmware(fwFile.files[0], 524288); // Max 512K
-				fw.parse()
-					.then(() => {
-						logger.info("Successfully loaded " + fw.format + " file \"" + fw.fileName + "\"");
+				
+				Firmware.fromFile(fwFile.files[0])
+					.then((fw) => {
+						logger.info("Loaded " + fw.format + " firmware file from \"" + fwFile.files[0].name + "\"");
 						fw.fillToEndOfSegment(1024);
-						createHexListing(fw.bytes);
+						createHexListing(fw.bytes, fw.fileName);
 						checkFirmwareSize(fw.size, device["flash"]["size"]);
+						firmware = fw;
 					})
 					.catch((err) => {
-						logger.error("Failed to parse file \"" + fw.fileName + "\"");
+						logger.error("Failed to load firmware from file \"" + fwFile.files[0].name + "\"");
 						logger.error(err.message);
 						window.alert(
-							"Failed to parse file \"" + fw.fileName + "\".\n\n" +
+							"Failed to load firmware from file \"" + fwFile.files[0].name + "\".\n\n" +
 							"See log for details."
 						);
-						fw = undefined;
+						firmware = undefined;
 						setActionButtonsEnabled(false, ["flash_write", "flash_verify"]);
 					});
 			}
@@ -277,15 +315,15 @@ Promise.all([contentLoaded, devicesLoaded])
 		});
 		
 		deviceList.addEventListener("change", (event) => {
-			device = devices.findDevice(deviceList.value);
+			device = devices.findDeviceByIndex(deviceList.value);
 			
 			logger.info(
 				"Selected device changed to: " +
 				device["name"] + " (" + device["package"] + ", " + Formatter.byteSize(device["flash"]["size"]) + " flash)"
 			);
 			
-			if(fw !== undefined) {
-				checkFirmwareSize(fw.size, device["flash"]["size"]);
+			if(firmware !== undefined) {
+				checkFirmwareSize(firmware.size, device["flash"]["size"]);
 			}
 		});
 		
@@ -355,10 +393,10 @@ Promise.all([contentLoaded, devicesLoaded])
 				.then(() => sess.identify())
 				.then(() => sess.configRead())
 				.then(() => sess.keyGenerate())
-				.then(() => sess.flashErase(fw.getSectorCount(1024)))
-				.then(() => sess.flashWrite(fw.bytes))
+				.then(() => sess.flashErase(firmware.getSectorCount(1024)))
+				.then(() => sess.flashWrite(firmware.bytes))
 				.then(() => sess.keyGenerate())
-				.then(() => sess.flashVerify(fw.bytes))
+				.then(() => sess.flashVerify(firmware.bytes))
 				.then(() => sess.reset(true))
 				.catch((err) => {
 					logger.error(err.message);
@@ -381,7 +419,7 @@ Promise.all([contentLoaded, devicesLoaded])
 				.then(() => sess.identify())
 				.then(() => sess.configRead())
 				.then(() => sess.keyGenerate())
-				.then(() => sess.flashVerify(fw.bytes))
+				.then(() => sess.flashVerify(firmware.bytes))
 				.then(() => sess.reset(true))
 				.catch((err) => {
 					logger.error(err.message);
@@ -424,6 +462,26 @@ Promise.all([contentLoaded, devicesLoaded])
 		logClear.addEventListener("click", (event) => {
 			clearLog();
 		});
+		
+		// When a device name was given in URL parameter, find it and
+		// automatically select it in the list.
+		if(params.has("dev")) {
+			const idx = devices.findDeviceIndexByName(params.get("dev"));
+			if(idx) {
+				deviceList.value = idx;
+				deviceList.dispatchEvent(new Event("change"));
+			} else {
+				throw new Error("Couldn't find device with name \"" + params.get("dev") + "\"");
+			}
+		}
+		
+		// When a firmware file URL was given in URL parameter, load it.
+		if(params.has("fw")) {
+			document.getElementById("fw_tab_url").checked = true;
+			fwUrl.value = params.get("fw");
+			fwUrlLoad.disabled = false;
+			fwUrlLoad.dispatchEvent(new Event("click"));
+		}
 	})
 	.catch((err) => {
 		console.error(err);
