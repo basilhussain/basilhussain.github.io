@@ -1,361 +1,328 @@
+/*******************************************************************************
+ *
+ * WCH RISC-V Microcontroller Web Serial ISP
+ * Copyright (c) 2025 Basil Hussain
+ * 
+ * This program is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Affero General Public License as published by the Free
+ * Software Foundation, either version 3 of the License, or (at your option) any
+ * later version.
+ * 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+ * details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program. If not, see <https://www.gnu.org/licenses/>.
+ * 
+ ******************************************************************************/
+
+/* style.css */
 body {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	background-color: white;
-	color: black;
-	font-family: sans-serif;
-	font-size: 10pt;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  color: black;
+  font-family: sans-serif;
+  font-size: 10pt;
 }
-
 main {
-	width: 760px;
+  width: 760px;
 }
-
 h1 {
-	font-size: 1.8em;
+  font-size: 1.8em;
 }
-
 div#unsupported {
-	background-color: #FFEF00;
-	border: 4px dashed black;
-	padding: 1em;
-	font-size: 1.5em;
-	text-align: center;
+  background-color: #FFEF00;
+  border: 4px dashed black;
+  padding: 1em;
+  font-size: 1.5em;
+  text-align: center;
 }
-
 div#unsupported p:first-child {
-	font-weight: bold;
+  font-weight: bold;
 }
-
 div#unsupported.hidden {
-	display: none;
+  display: none;
 }
-
 #form section {
-	margin: 1em 0;
-	border: 2px solid #AF0000;
+  margin: 1em 0;
+  border: 2px solid #AF0000;
 }
-
 #form section > h2:first-child {
-	margin: 0 0 0.5em 0;
-	padding: 0.25em;
-	background-color: #AF0000;
-	color: white;
-	font-size: 1em;
+  margin: 0 0 0.5em 0;
+  padding: 0.25em;
+  background-color: #AF0000;
+  color: white;
+  font-size: 1em;
 }
-
-#form section > p, section > div, section > table {
-	margin: 0.5em;
+#form section > p,
+section > div,
+section > table {
+  margin: 0.5em;
 }
-
-input, select, button {
-	border: 1px solid #767676;
-	border-radius: 0;
-	color: black;
-	background-color: #EDEDED;
-	padding: 0.25em 0.4em;
+input,
+select,
+button {
+  border: 1px solid #767676;
+  border-radius: 0;
+  color: black;
+  background-color: #EDEDED;
+  padding: 0.25em 0.4em;
 }
-
-input:focus, select:focus, button:focus {
-	outline-color: black;
-	outline-width: 3px;
+input:focus,
+select:focus,
+button:focus {
+  outline-color: black;
+  outline-width: 3px;
 }
-
 button:hover {
-	background-color: #E2E2E2;
+  background-color: #E2E2E2;
 }
-
 button:active {
-	background-color: #D8D8D8;
+  background-color: #D8D8D8;
 }
-
-button:disabled, select:disabled {
-	color: #1010104C;
+button:disabled,
+select:disabled {
+  color: #1010104C;
 }
-
-div.fw_tabs > input[type="radio"] {
-	position: absolute;
-	left: -200vw;
+div.fw_tabs > input[type=radio] {
+  position: absolute;
+  left: -200vw;
 }
-
 div.fw_tabs > label {
-	display: inline-block;
-	cursor: pointer;
-	padding: 0.2em 0.5em;
-	border: 1px solid transparent;
-	border-radius: 0.5em 0.5em 0 0;
-	margin-bottom: -1px;
+  display: inline-block;
+  cursor: pointer;
+  padding: 0.2em 0.5em;
+  border: 1px solid transparent;
+  border-radius: 0.5em 0.5em 0 0;
+  margin-bottom: -1px;
 }
-
-div.fw_tabs > input[type="radio"]:checked + label {
-	font-weight: bold;
-	border-color: #767676;
-	border-bottom: 1px solid white;
+div.fw_tabs > input[type=radio]:checked + label {
+  font-weight: bold;
+  border-color: #767676;
+  border-bottom: 1px solid white;
 }
-
 div.fw_tabs div.fw_tab_panels {
-	border: 1px solid #767676;
-	padding: 0.5em;
+  border: 1px solid #767676;
+  padding: 0.5em;
 }
-
 div.fw_tabs div.fw_tab_panel {
-	display: none;
+  display: none;
 }
-
 div.fw_tabs div.fw_tab_panel > div {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
-
 div.fw_tabs div.fw_tab_panel > progress {
-	width: 100%;
-	height: 1em;
+  width: 100%;
+  height: 1em;
 }
-
-div.fw_tabs > input[type="radio"]:nth-child(1):checked ~ div.fw_tab_panels > div.fw_tab_panel:nth-child(1),
-div.fw_tabs > input[type="radio"]:nth-child(3):checked ~ div.fw_tab_panels > div.fw_tab_panel:nth-child(2) {
-	display: block;
+div.fw_tabs > input[type=radio]:nth-child(1):checked ~ div.fw_tab_panels > div.fw_tab_panel:nth-child(1),
+div.fw_tabs > input[type=radio]:nth-child(3):checked ~ div.fw_tab_panels > div.fw_tab_panel:nth-child(2) {
+  display: block;
 }
-
-div.fw_tabs input[type="file"]#fw_file, div.fw_tabs input[type="url"]#fw_url {
-	width: 100%;
+div.fw_tabs input[type=file]#fw_file,
+div.fw_tabs input[type=url]#fw_url {
+  width: 100%;
 }
-
 div.fw_tabs button#fw_url_load {
-	margin-left: 0.5em;
+  margin-left: 0.5em;
 }
-
 p.fw_info {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
-
 p.fw_info span.fw_size {
-	margin-left: 0.5em;
-	white-space: nowrap;
+  margin-left: 0.5em;
+  white-space: nowrap;
 }
-
 div.hex {
-	height: 25ex;
-	overflow-y: scroll;
-	border: 1px solid black;
-	padding: 0 0.2em;
-	font-family: monospace;
-	white-space: pre;
+  height: 25ex;
+  overflow-y: scroll;
+  border: 1px solid black;
+  padding: 0 0.2em;
+  font-family: monospace;
+  white-space: pre;
 }
-
 div.hex > span.o {
-	font-weight: bold;
-	margin-right: 0.5em;
-	border-right: 1px solid black;
-	padding-right: 0.5em;
+  font-weight: bold;
+  margin-right: 0.5em;
+  border-right: 1px solid black;
+  padding-right: 0.5em;
 }
-
 div.hex > span.p {
-	font-style: italic;
-	margin-left: 0.5em;
-	border-left: 1px solid black;
-	padding-left: 0.5em;
+  font-style: italic;
+  margin-left: 0.5em;
+  border-left: 1px solid black;
+  padding-left: 0.5em;
 }
-
 table.config {
-	border-spacing: 0.5em 0.2em;
+  border-spacing: 0.5em 0.2em;
 }
-
 table.config td:nth-child(odd) {
-	text-align: right;
+  text-align: right;
 }
-
-table.config td input[type="text"] {
-	width: 4em;
-	background-repeat: no-repeat;
-	background-position: right center;
-	background-size: contain;
+table.config td input[type=text] {
+  width: 4em;
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: contain;
 }
-
-table.config td input[type="text"]:valid {
-	background-image: url("images/check-small.svg");
+table.config td input[type=text]:valid {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><path fill="none" stroke="%2305C12E" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M10 24L20 34L40 14"/></svg>');
 }
-
-table.config td input[type="text"]:invalid {
-	background-image: url("images/cross-small.svg");
+table.config td input[type=text]:invalid {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><g fill="none" stroke="%23D80000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M14 14L34 34"/><path d="M14 34L34 14"/></g></svg>');
 }
-
 p#actions {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: flex-start;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
 }
-
 p#actions > button {
-	margin-right: 1em;
-	padding-left: 1.95em;
-	background-repeat: no-repeat;
-	background-position: 0.25em center;
-	background-size: 1.5em;
-	height: 2.1em;
+  margin-right: 1em;
+  padding-left: 1.95em;
+  background-repeat: no-repeat;
+  background-position: 0.25em center;
+  background-size: 1.5em;
+  height: 2.1em;
 }
-
 p#actions > button:last-child {
-	margin-right: 0;
+  margin-right: 0;
 }
-
 p#actions > button:disabled {
-	background-blend-mode: overlay;
+  background-blend-mode: overlay;
 }
-
 p#actions > button#config_read {
-	background-image: url("images/config-read.svg");
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><g fill="none" stroke="%23000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M6 10L42 10"/><path d="M6 20L42 20"/><path d="M6 40L24 26L42 40"/></g></svg>');
 }
-
 p#actions > button#config_write {
-	background-image: url("images/config-write.svg");
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><g fill="none" stroke="%23000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M6 9L42 9"/><path d="M6 19L42 19"/><path d="M6 26L24 40L42 26"/></g></svg>');
 }
-
 p#actions > button#flash_write {
-	background-image: url("images/flash-write.svg");
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><g fill="none" stroke="%23000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M19 6H9C7.34315 6 6 7.34315 6 9V39C6 40.6569 7.34315 42 9 42H39C40.6569 42 42 40.6569 42 39V29"/><path d="M18 17L22 29L34 25"/><path d="M22 29C27 14 30 11 40 7"/></g></svg>');
 }
-
 p#actions > button#flash_verify {
-	background-image: url("images/flash-verify.svg");
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><g fill="none" stroke="%23000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M42 20V39C42 40.6569 40.6569 42 39 42H9C7.34315 42 6 40.6569 6 39V9C6 7.34315 7.34315 6 9 6H30"/><path d="M16 20L26 28L41 7"/></g></svg>');
 }
-
 p#actions > button#flash_erase {
-	background-image: url("images/flash-erase.svg");
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><g fill="none" stroke="%23000" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"><path d="M4 42H44"/><path fill="%232F88FF" d="M31 4L7 28L13 34H21L41 14L31 4Z"/></g></svg>');
 }
-
 p.progress {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
-
 p.progress progress#progress_bar {
-	width: 100%;
-	height: 1.5em;
+  width: 100%;
+  height: 1.5em;
 }
-
 p.progress #progress_pct {
-	margin-left: 0.5em;
+  margin-left: 0.5em;
 }
-
 p.progress #progress_result {
-	display: none;
-	width: 1.5em;
-	height: 1.5em;
-	margin-right: 0.5em;
-	background-repeat: no-repeat;
-	background-position: center;
-	background-size: contain;
+  display: none;
+  width: 1.5em;
+  height: 1.5em;
+  margin-right: 0.5em;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
 }
-
 p.progress #progress_result.success {
-	display: block;
-	background-image: url("images/check-green.svg");
+  display: block;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><g fill="none" stroke-linejoin="round" stroke-width="4"><path fill="%2305C12E" stroke="%23000" d="M24 44C29.5228 44 34.5228 41.7614 38.1421 38.1421C41.7614 34.5228 44 29.5228 44 24C44 18.4772 41.7614 13.4772 38.1421 9.85786C34.5228 6.23858 29.5228 4 24 4C18.4772 4 13.4772 6.23858 9.85786 9.85786C6.23858 13.4772 4 18.4772 4 24C4 29.5228 6.23858 34.5228 9.85786 38.1421C13.4772 41.7614 18.4772 44 24 44Z"/><path stroke="%23fff" stroke-linecap="round" d="M16 24L22 30L34 18"/></g></svg>');
 }
-
 p.progress #progress_result.failure {
-	display: block;
-	background-image: url("images/cross-red.svg");
+  display: block;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 48 48"><g fill="none" stroke-linejoin="round" stroke-width="4"><path fill="%23D80000" stroke="%23000" d="M24 44C35.0457 44 44 35.0457 44 24C44 12.9543 35.0457 4 24 4C12.9543 4 4 12.9543 4 24C4 35.0457 12.9543 44 24 44Z"/><path stroke="%23fff" stroke-linecap="round" d="M29.6567 18.3432L18.343 29.6569"/><path stroke="%23fff" stroke-linecap="round" d="M18.3433 18.3432L29.657 29.6569"/></g></svg>');
 }
-
 div#log {
-	height: 25ex;
-	overflow: scroll;
-	border: 1px solid black;
-	font-family: monospace;
+  height: 25ex;
+  overflow: scroll;
+  border: 1px solid black;
+  font-family: monospace;
 }
-
 div#log > p {
-	margin: 0;
-	white-space: pre;
+  margin: 0;
+  white-space: pre;
 }
-
 div#log > p > .time {
-	color: #808080;
+  color: #808080;
 }
-
 div#log > p > .level {
-	font-weight: bold;
+  font-weight: bold;
 }
-
 div#log > p > .level.info {
-	color: #0072BF;
+  color: #0072BF;
 }
-
 div#log > p > .level.warning {
-	color: #BF9F00;
+  color: #BF9F00;
 }
-
 div#log > p > .level.error {
-	color: #BF0000;
+  color: #BF0000;
 }
-
 div#log > p > .level.debug {
-	color: #BF00A5;
+  color: #BF00A5;
 }
-
 p.log_ctrls {
-	display: flex;
-	flex-direction: row;
-	align-items: center;
-	justify-content: space-between;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
 }
-
 section.help > h2 {
-	border-bottom: 1px solid #767676;
-	padding-bottom: 0.2em;
+  border-bottom: 1px solid #767676;
+  padding-bottom: 0.2em;
 }
-
-section.help hgroup p, section.help hgroup ul, section.help hgroup ol, section.help hgroup table {
-	margin-left: 3em;
-}
-
+section.help hgroup p,
+section.help hgroup ul,
+section.help hgroup ol,
 section.help hgroup table {
-	border: 1px solid #767676;
-	border-spacing: 0;
-	border-collapse: collapse;
+  margin-left: 3em;
 }
-
-section.help hgroup table td, section.help hgroup table th {
-	border: 1px solid #767676;
-	padding: 0.2em 0.5em;
-	vertical-align: middle;
+section.help hgroup table {
+  border: 1px solid #767676;
+  border-spacing: 0;
+  border-collapse: collapse;
 }
-
+section.help hgroup table td,
 section.help hgroup table th {
-	font-weight: bold;
-	white-space: nowrap;
-	vertical-align: bottom;
+  border: 1px solid #767676;
+  padding: 0.2em 0.5em;
+  vertical-align: middle;
 }
-
+section.help hgroup table th {
+  font-weight: bold;
+  white-space: nowrap;
+  vertical-align: bottom;
+}
 section.help hgroup p span.note {
-	font-size: 0.8em;
-	font-style: italic;
+  font-size: 0.8em;
+  font-style: italic;
 }
-
 footer.footer {
-	border-top: 1px solid #767676;
-	font-size: 0.8em;
-	text-align: center;
-	color: #767676;
+  border-top: 1px solid #767676;
+  font-size: 0.8em;
+  text-align: center;
+  color: #767676;
 }
-
 footer.footer p {
-	margin: 0.5em 0;
+  margin: 0.5em 0;
 }
-
 footer.footer a.github {
-	padding-left: 1.4em;
-	background-repeat: no-repeat;
-	background-position: left center;
-	background-size: contain;
-	background-image: url("images/github.svg");
+  padding-left: 1.4em;
+  background-repeat: no-repeat;
+  background-position: left center;
+  background-size: contain;
+  background-image: url('data:image/svg+xml,<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">%0A<path fill-rule="evenodd" clip-rule="evenodd" d="M16 0C7.16 0 0 7.16 0 16C0 23.08 4.58 29.06 10.94 31.18C11.74 31.32 12.04 30.84 12.04 30.42C12.04 30.04 12.02 28.78 12.02 27.44C8 28.18 6.96 26.46 6.64 25.56C6.46 25.1 5.68 23.68 5 23.3C4.44 23 3.64 22.26 4.98 22.24C6.24 22.22 7.14 23.4 7.44 23.88C8.88 26.3 11.18 25.62 12.1 25.2C12.24 24.16 12.66 23.46 13.12 23.06C9.56 22.66 5.84 21.28 5.84 15.16C5.84 13.42 6.46 11.98 7.48 10.86C7.32 10.46 6.76 8.82 7.64 6.62C7.64 6.62 8.98 6.2 12.04 8.26C13.32 7.9 14.68 7.72 16.04 7.72C17.4 7.72 18.76 7.9 20.04 8.26C23.1 6.18 24.44 6.62 24.44 6.62C25.32 8.82 24.76 10.46 24.6 10.86C25.62 11.98 26.24 13.4 26.24 15.16C26.24 21.3 22.5 22.66 18.94 23.06C19.52 23.56 20.02 24.52 20.02 26.02C20.02 28.16 20 29.88 20 30.42C20 30.84 20.3 31.34 21.1 31.18C27.42 29.06 32 23.06 32 16C32 7.16 24.84 0 16 0V0Z" fill="%2324292E"/>%0A</svg>%0A');
 }
