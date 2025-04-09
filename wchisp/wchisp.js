@@ -334,6 +334,11 @@
       return value.toLocaleString() + " " + BYTE_UNITS[exponent];
     }
   };
+  var Delay = class {
+    static milliseconds(ms) {
+      return new Promise((r) => setTimeout(r, ms));
+    }
+  };
   var ContentDispositionDecoder = class {
     static #entityDecode(str) {
       return new Uint8Array(
@@ -889,8 +894,40 @@
   };
 
   // modules/transceiver.js
+  var PORT_FLUSH_BLOCKLIST = [
+    // Silicon Labs CP2102N
+    { vid: 4292, pid: 6e4 },
+    { vid: 4292, pid: 60001 },
+    { vid: 4292, pid: 60003 }
+  ];
   var Transceiver = class {
     #port;
+    #dtrRtsReset = false;
+    constructor(dtrRtsReset = false) {
+      this.#dtrRtsReset = dtrRtsReset;
+    }
+    #canFlushPort(vid, pid) {
+      return !PORT_FLUSH_BLOCKLIST.some((elem) => elem.vid === vid && elem.pid === pid);
+    }
+    async #resetWithDtrRts(resetPeriodMs = 100, delayPeriodMs = 100) {
+      try {
+        await this.#port.setSignals({
+          dataTerminalReady: false,
+          requestToSend: true
+        });
+        await Delay.milliseconds(resetPeriodMs);
+        await this.#port.setSignals({
+          dataTerminalReady: true,
+          requestToSend: false
+        });
+        await Delay.milliseconds(delayPeriodMs);
+        await this.#port.setSignals({
+          dataTerminalReady: false
+        });
+      } catch (err) {
+        throw new Error("Error occurred attempting to toggle DTR/RTS sequence for reset into bootloader", { cause: err });
+      }
+    }
     async open() {
       if (!("serial" in navigator)) {
         throw new Error("Web Serial API is unsupported by this browser");
@@ -900,6 +937,7 @@
       } catch (err) {
         throw new Error("Serial port selection cancelled or permission denied", { cause: err });
       }
+      const portInfo = this.#port.getInfo();
       try {
         await this.#port.open({
           baudRate: 115200,
@@ -908,9 +946,14 @@
           parity: "none",
           flowControl: "none"
         });
-        await this.#port.readable.cancel();
+        if (this.#canFlushPort(portInfo.usbVendorId, portInfo.usbProductId)) {
+          await this.#port.readable.cancel();
+        }
       } catch (err) {
         throw new Error("Error occurred attempting to open serial port", { cause: err });
+      }
+      if (this.#dtrRtsReset) {
+        await this.#resetWithDtrRts();
       }
     }
     async transmitPacket(packet) {
@@ -1023,9 +1066,9 @@
     #chipUID;
     #key;
     #sequence = 0;
-    constructor(deviceVariant, deviceType) {
+    constructor(deviceVariant, deviceType, deviceDtrRtsReset) {
       super();
-      this.#trx = new Transceiver();
+      this.#trx = new Transceiver(deviceDtrRtsReset);
       this.#device = { variant: deviceVariant, type: deviceType };
     }
     #logPacket(prefix, packet) {
@@ -2298,6 +2341,7 @@
   var contentLoaded = new Promise((resolve) => document.addEventListener("DOMContentLoaded", resolve, false));
   contentLoaded.then(() => {
     const deviceList = document.getElementById("device_list");
+    const deviceDtrRtsReset = document.getElementById("device_dtr_rts_reset");
     const fwUrl = document.getElementById("fw_url");
     const fwUrlLoad = document.getElementById("fw_url_load");
     const fwFile = document.getElementById("fw_file");
@@ -2394,7 +2438,7 @@
     configRead.addEventListener("click", (event) => {
       const btnState = setActionButtonsEnabled(false);
       let success = true;
-      const sess = new Session(device["variant"], device["type"]);
+      const sess = new Session(device["variant"], device["type"], deviceDtrRtsReset.checked);
       sess.setLogger(logger);
       sess.addEventListener("progress", updateOperationProgress);
       sess.start().then(() => sess.identify()).then(() => sess.configRead()).then((config) => {
@@ -2413,7 +2457,7 @@
     configWrite.addEventListener("click", (event) => {
       const btnState = setActionButtonsEnabled(false);
       let success = true;
-      const sess = new Session(device["variant"], device["type"]);
+      const sess = new Session(device["variant"], device["type"], deviceDtrRtsReset.checked);
       sess.setLogger(logger);
       sess.addEventListener("progress", updateOperationProgress);
       sess.start().then(() => sess.identify()).then(() => sess.configRead()).then(() => sess.configWrite(getConfigBytes())).then(() => sess.reset(true)).catch((err) => {
@@ -2428,7 +2472,7 @@
     flashWrite.addEventListener("click", (event) => {
       const btnState = setActionButtonsEnabled(false);
       let success = true;
-      const sess = new Session(device["variant"], device["type"]);
+      const sess = new Session(device["variant"], device["type"], deviceDtrRtsReset.checked);
       sess.setLogger(logger);
       sess.addEventListener("progress", updateOperationProgress);
       sess.start().then(() => sess.identify()).then(() => sess.configRead()).then(() => sess.keyGenerate()).then(() => sess.flashErase(firmware.getSectorCount(1024))).then(() => sess.flashWrite(firmware.bytes)).then(() => sess.keyGenerate()).then(() => sess.flashVerify(firmware.bytes)).then(() => sess.reset(true)).catch((err) => {
@@ -2443,7 +2487,7 @@
     flashVerify.addEventListener("click", (event) => {
       const btnState = setActionButtonsEnabled(false);
       let success = true;
-      const sess = new Session(device["variant"], device["type"]);
+      const sess = new Session(device["variant"], device["type"], deviceDtrRtsReset.checked);
       sess.setLogger(logger);
       sess.addEventListener("progress", updateOperationProgress);
       sess.start().then(() => sess.identify()).then(() => sess.configRead()).then(() => sess.keyGenerate()).then(() => sess.flashVerify(firmware.bytes)).then(() => sess.reset(true)).catch((err) => {
@@ -2461,7 +2505,7 @@
       )) {
         const btnState = setActionButtonsEnabled(false);
         let success = true;
-        const sess = new Session(device["variant"], device["type"]);
+        const sess = new Session(device["variant"], device["type"], deviceDtrRtsReset.checked);
         sess.setLogger(logger);
         sess.addEventListener("progress", updateOperationProgress);
         sess.start().then(() => sess.identify()).then(() => sess.configRead()).then(() => sess.flashErase(Math.ceil(device["flash"]["size"] / 1024))).then(() => sess.reset(true)).catch((err) => {
